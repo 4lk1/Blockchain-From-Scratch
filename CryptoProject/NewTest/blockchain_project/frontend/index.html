@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0e27">
+    <title>Blockchain Explorer — Visualized</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated Aurora Background -->
+    <div class="aurora-background">
+        <div class="aurora-layer aurora-1"></div>
+        <div class="aurora-layer aurora-2"></div>
+        <div class="aurora-layer aurora-3"></div>
+        <div class="aurora-orb orb-1"></div>
+        <div class="aurora-orb orb-2"></div>
+        <div class="aurora-orb orb-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">⛓️ Blockchain</div>
+            <div class="nav-stats">
+                <div class="stat-badge">
+                    <span class="stat-label">Blocks</span>
+                    <span class="stat-value" id="navBlocks">1</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">Wallets</span>
+                    <span class="stat-value" id="navWallets">0</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">Difficulty</span>
+                    <span class="stat-value" id="navDifficulty">3</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    The Blockchain<br><span class="gradient-text">Explorer</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Visualize cryptographic immutability and consensus mechanisms in real-time
+                </p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="scrollTo('explorer-section')">
+                        Explore Now
+                    </button>
+                    <button class="btn btn-secondary" onclick="scrollTo('mining-section')">
+                        Start Mining
+                    </button>
+                </div>
+                <div class="scroll-indicator">
+                    <div class="scroll-dot"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Network Visualization Section -->
+        <section class="section network-section" id="network-section">
+            <div class="section-header">
+                <h2>Blockchain Network</h2>
+                <p>Live chain visualization with cryptographic verification</p>
+            </div>
+            <div class="blockchain-viz">
+                <div id="blockchainViz" class="chain-container"></div>
+            </div>
+        </section>
+
+        <!-- Live Explorer Section -->
+        <section class="section explorer-section" id="explorer-section">
+            <div class="section-header">
+                <h2>Live Explorer</h2>
+                <p>Real-time blockchain metadata and transaction tracking</p>
+            </div>
+            
+            <div class="explorer-grid">
+                <!-- Chain Status -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Chain Status</h3>
+                        <div class="status-indicator" id="chainValid">●</div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="stat-row">
+                            <span>Chain Length</span>
+                            <span class="stat-value" id="chainLength">1</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Pending TX</span>
+                            <span class="stat-value" id="pendingTxCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Status</span>
+                            <span class="stat-value" id="integrityStatus">Valid</span>
+                        </div>
+                        <button class="btn btn-accent btn-small" onclick="validateBlockchain()">Validate</button>
+                    </div>
+                </div>
+
+                <!-- Mining Stats -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Mining Parameters</h3>
+                        <span class="icon">⚙️</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="stat-row">
+                            <span>Difficulty</span>
+                            <span class="stat-value" id="statsdifficulty">3</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Block Reward</span>
+                            <span class="stat-value" id="statsReward">10.0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Network Value</span>
+                            <span class="stat-value" id="totalValue">0</span>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <label style="font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Adjust Difficulty</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="number" id="difficultyInput" placeholder="1-7" class="glass-input" min="1" max="7" value="3" style="flex: 1;">
+                                <button class="btn btn-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="setDifficulty()">Set</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Block -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Last Block</h3>
+                        <span class="icon">📦</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="hash-display">
+                            <span id="lastBlockHash"class="hash-value">0x000...</span>
+                            <button class="btn-copy" onclick="copyHash('lastBlockHash')">📋</button>
+                        </div>
+                        <div class="stat-row">
+                            <span>Index</span>
+                            <span class="stat-value" id="lastBlockIndex">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Nonce</span>
+                            <span class="stat-value" id="lastBlockNonce">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transaction Stream -->
+        <section class="section transaction-section" id="transaction-section">
+            <div class="section-header">
+                <h2>Transaction Stream</h2>
+                <p>Pending and confirmed transactions across the network</p>
+            </div>
+            <div class="transaction-list" id="transactionList">
+                <div class="empty-state">No transactions yet</div>
+            </div>
+        </section>
+
+        <!-- Wallet Ecosystem -->
+        <section class="section wallet-section" id="wallet-section">
+            <div class="section-header">
+                <h2>Wallet Ecosystem</h2>
+                <p>Create and manage blockchain identities</p>
+            </div>
+            
+            <div class="wallet-controls">
+                <div class="glass-panel">
+                    <h3>Create Wallet</h3>
+                    <div class="form-group">
+                        <input type="text" id="walletName" placeholder="Wallet name (e.g., Alice)" class="glass-input" maxlength="30">
+                        <button class="btn btn-primary" onclick="createWallet()">Generate Wallet</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallets-grid" id="walletsGrid">
+                <div class="empty-state">No wallets created yet. Create one to start.</div>
+            </div>
+        </section>
+
+        <!-- Create Transaction -->
+        <section class="section transaction-create-section" id="transaction-create-section">
+            <div class="section-header">
+                <h2>Create Transaction</h2>
+                <p>Transfer value between wallets and add to the pending pool</p>
+            </div>
+
+            <div class="glass-panel">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>From Wallet</label>
+                        <select id="senderSelect" class="glass-input">
+                            <option value="">Select sender</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>To Wallet</label>
+                        <select id="receiverSelect" class="glass-input">
+                            <option value="">Select receiver</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="txAmount" placeholder="0.00" class="glass-input" step="0.01" min="0.01">
+                    </div>
+                    <button class="btn btn-primary" onclick="submitTransaction()">Send Transaction</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mining Center -->
+        <section class="section mining-section" id="mining-section">
+            <div class="section-header">
+                <h2>Mining Center</h2>
+                <p>Proof-of-Work consensus and block creation</p>
+            </div>
+
+            <div class="mining-container">
+                <div class="glass-panel">
+                    <h3>Start Mining</h3>
+                    <div class="form-group">
+                        <label>Select Miner Wallet</label>
+                        <select id="minerSelect" class="glass-input">
+                            <option value="">Create a wallet first</option>
+                        </select>
+                        <button class="btn btn-accent" onclick="mineBlock()">Begin Mining</button>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 0.5rem;">💡 <strong>Tip:</strong> Higher difficulty takes longer to mine!</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <h3>Mining Statistics</h3>
+                    <div class="mining-stats">
+                        <div class="mining-stat">
+                            <span class="label">Current Nonce</span>
+                            <span class="value" id="currentNonce">0</span>
+                        </div>
+                        <div class="mining-stat">
+                            <span class="label">Hash Attempts</span>
+                            <span class="value" id="hashAttempts">0</span>
+                        </div>
+                        <div class="mining-stat">
+                            <span class="label">Mining Time</span>
+                            <span class="value" id="miningTime">0s</span>
+                        </div>
+                    </div>
+                    <div class="hash-display">
+                        <span id="currentHash" class="hash-value">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Laboratory -->
+        <section class="section security-section" id="security-section">
+            <div class="section-header">
+                <h2>Security Laboratory</h2>
+                <p>Interactive demonstrations of blockchain security principles</p>
+            </div>
+
+            <div class="lab-grid">
+                <!-- Validation Demo -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Chain Validation</h3>
+                        <span>🔍</span>
+                    </div>
+                    <div id="validationResults" class="validation-results">
+                        <p>Click validate to check chain integrity</p>
+                    </div>
+                    <button class="btn btn-accent" onclick="validateBlockchain()">Run Validation</button>
+                </div>
+
+                <!-- Tampering Demo -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Tampering Detection</h3>
+                        <span>⚠️</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Block Index</label>
+                        <input type="number" id="tamperBlockIndex" placeholder="0" class="glass-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Index</label>
+                        <input type="number" id="tamperTxIndex" placeholder="0" class="glass-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>New Amount</label>
+                        <input type="number" id="tamperAmount" placeholder="100" class="glass-input">
+                    </div>
+                    <button class="btn btn-warning" onclick="performTamper()">Demonstrate Tampering</button>
+                </div>
+            </div>
+
+            <div id="tamperResults" class="tamper-results hidden">
+                <div class="glass-panel">
+                    <h3>Tampering Results</h3>
+                    <div id="tamperComparison"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 51% Attack Simulator -->
+        <section class="section attack-section" id="attack-section">
+            <div class="section-header">
+                <h2>51% Attack Simulator</h2>
+                <p>Visualize how majority hash power can compromise consensus</p>
+            </div>
+
+            <div class="glass-panel">
+                <div class="attack-visualization" id="attackViz">
+                    <div class="network-visualization">
+                        <div class="network-side honest">
+                            <h4>Honest Network (40%)</h4>
+                            <div class="chain-race" id="honestChain"></div>
+                        </div>
+                        <div class="network-side attacker">
+                            <h4>Attacker (60%)</h4>
+                            <div class="chain-race" id="attackerChain"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-warning" onclick="simulate51Attack()">Start Attack Simulation</button>
+            </div>
+
+            <div id="attackResults" class="attack-results hidden">
+                <div class="glass-panel">
+                    <h3>Attack Results</h3>
+                    <div id="attackResultsContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Controls -->
+        <section class="section controls-section" id="controls-section">
+            <div class="section-header">
+                <h2>System Controls</h2>
+            </div>
+            <div class="glass-panel">
+                <button class="btn btn-danger" onclick="resetBlockchain()">Reset Blockchain to Genesis</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>Blockchain Explorer © 2026 • Educational Cryptocurrency Simulator</p>
+            <p>Built with ECDSA cryptography, Proof-of-Work consensus, and SHA-256 hashing</p>   
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
