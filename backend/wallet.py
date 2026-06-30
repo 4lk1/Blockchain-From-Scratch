@@ -42,6 +42,26 @@ class Wallet:
         # Use first 40 characters for address (similar to Bitcoin)
         return address_hash[:40]
 
+    @classmethod
+    def from_private_key_pem(cls, private_key_pem: bytes) -> "Wallet":
+        """Restore a wallet from an encrypted-at-rest private key."""
+        wallet = cls.__new__(cls)
+        wallet.private_key = ecdsa.SigningKey.from_pem(private_key_pem)
+        wallet.public_key = wallet.private_key.get_verifying_key()
+        wallet.address = wallet._derive_address()
+        return wallet
+
+    @staticmethod
+    def address_from_public_key_pem(public_key_pem: bytes) -> str:
+        public_key = ecdsa.VerifyingKey.from_pem(public_key_pem)
+        public_key_bytes = public_key.to_string()
+        address_hash = hashlib.sha256(public_key_bytes).hexdigest()
+        return address_hash[:40]
+
+    @staticmethod
+    def address_matches_public_key(address: str, public_key_pem: bytes) -> bool:
+        return address == Wallet.address_from_public_key_pem(public_key_pem)
+
     def get_address(self):
         """
         Get the wallet's public address.
@@ -94,7 +114,8 @@ class Wallet:
         # Return signature as hex string
         return signature.hex()
 
-    def verify_signature(self, transaction_hash, signature_hex, public_key_pem):
+    @staticmethod
+    def verify_signature(transaction_hash, signature_hex, public_key_pem):
         """
         Verify a transaction signature using a public key.
 

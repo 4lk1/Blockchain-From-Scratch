@@ -1,0 +1,247 @@
+/* Accessibility — WCAG 2.2 enhancements */
+
+/* Visible focus for all interactive elements */
+a:focus-visible,
+button:focus-visible,
+[tabindex="0"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--focus-color, var(--accent));
+    outline-offset: 2px;
+}
+
+.nav-link:focus-visible,
+.viz-topic:focus-visible,
+.edu-nav__link:focus-visible,
+.edu-learn-link:focus-visible {
+    outline: 3px solid var(--focus-color, var(--accent));
+    outline-offset: 2px;
+    box-shadow: var(--focus-ring);
+}
+
+/* Minimum touch target (WCAG 2.5.8) */
+.btn,
+.nav-link,
+.viz-topic,
+.edu-nav__link,
+.icon-btn {
+    min-height: 44px;
+}
+
+.icon-btn--sm {
+    min-height: 36px;
+    min-width: 36px;
+}
+
+/* High contrast mode */
+html[data-contrast='high'][data-theme='light'] {
+    --bg: #ffffff;
+    --bg-subtle: #ffffff;
+    --surface: #ffffff;
+    --surface-hover: #f0f0f0;
+    --border: #000000;
+    --border-strong: #000000;
+    --text: #000000;
+    --text-secondary: #1a1a1a;
+    --text-muted: #333333;
+    --accent: #0000cc;
+    --accent-soft: #e8e8ff;
+    --accent-hover: #000099;
+    --success: #006400;
+    --success-soft: #e6f4e6;
+    --warning: #8b4513;
+    --warning-soft: #fff3e0;
+    --danger: #cc0000;
+    --danger-soft: #ffe6e6;
+    --focus-color: #000000;
+    --focus-ring: 0 0 0 4px #000000;
+}
+
+html[data-contrast='high'][data-theme='dark'] {
+    --bg: #000000;
+    --bg-subtle: #000000;
+    --surface: #0a0a0a;
+    --surface-hover: #1a1a1a;
+    --border: #ffffff;
+    --border-strong: #ffffff;
+    --text: #ffffff;
+    --text-secondary: #f0f0f0;
+    --text-muted: #cccccc;
+    --accent: #6eb6ff;
+    --accent-soft: #1a2a40;
+    --accent-hover: #9ecdff;
+    --success: #5cff5c;
+    --success-soft: #0a2a0a;
+    --warning: #ffd966;
+    --warning-soft: #2a2000;
+    --danger: #ff6b6b;
+    --danger-soft: #2a0a0a;
+    --focus-color: #ffffff;
+    --focus-ring: 0 0 0 4px #ffffff;
+}
+
+@media (prefers-contrast: more) {
+    html:not([data-contrast='normal']) {
+        --border-strong: var(--text);
+    }
+
+    .badge,
+    .stat-card,
+    .card {
+        border-width: 2px;
+    }
+}
+
+/* Skip links container */
+.skip-links {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2);
+}
+
+.skip-links .skip-link {
+    position: static;
+    top: auto;
+    left: auto;
+}
+
+.skip-links .skip-link:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.skip-links .skip-link:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    clip: auto;
+    overflow: visible;
+}
+
+/* Screen reader announcer */
+#a11y-announcer {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Table accessibility */
+.data-table caption {
+    caption-side: top;
+    text-align: left;
+    padding: var(--space-2) var(--space-4);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.caption-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Keyboard shortcut hint */
+.a11y-shortcuts {
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.a11y-shortcuts kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: var(--bg-subtle);
+}
+
+/* Reduced motion — already in perf.css; reinforce focus visibility */
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto;
+    }
+}
+
+/* Responsive — ensure readable text and tap targets on small screens */
+@media (max-width: 768px) {
+    body.sidebar-open .sidebar {
+        box-shadow: var(--shadow-md);
+    }
+
+    .sidebar:focus-within {
+        outline: none;
+    }
+
+    .page-title {
+        font-size: 1.375rem;
+    }
+
+    .data-table {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar__actions {
+        gap: var(--space-1);
+    }
+
+    .btn--sm {
+        min-height: 44px;
+        padding-left: var(--space-3);
+        padding-right: var(--space-3);
+    }
+}
+
+/* Forced colors / Windows high contrast */
+@media (forced-colors: active) {
+    .btn,
+    .nav-link,
+    .card,
+    .input {
+        border: 2px solid ButtonText;
+    }
+
+    .nav-link--active {
+        outline: 2px solid Highlight;
+    }
+
+    .status-dot--valid {
+        background: LinkText;
+    }
+
+    .status-dot--invalid {
+        background: GrayText;
+    }
+}

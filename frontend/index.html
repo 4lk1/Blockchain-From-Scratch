@@ -1,371 +1,741 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-theme-preference="system">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a0e27">
-    <title>Blockchain Explorer — Visualized</title>
+    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Blockchain explorer and developer dashboard for the educational simulator">
+    <meta name="chain-api-url" content="http://localhost:8000">
+    <title>Chain Explorer — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/dx.css">
+    <link rel="stylesheet" href="css/perf.css">
+    <link rel="stylesheet" href="css/accessibility.css">
 </head>
 <body>
-    <!-- Animated Aurora Background -->
-    <div class="aurora-background">
-        <div class="aurora-layer aurora-1"></div>
-        <div class="aurora-layer aurora-2"></div>
-        <div class="aurora-layer aurora-3"></div>
-        <div class="aurora-orb orb-1"></div>
-        <div class="aurora-orb orb-2"></div>
-        <div class="aurora-orb orb-3"></div>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">⛓️ Blockchain</div>
-            <div class="nav-stats">
-                <div class="stat-badge">
-                    <span class="stat-label">Blocks</span>
-                    <span class="stat-value" id="navBlocks">1</span>
-                </div>
-                <div class="stat-badge">
-                    <span class="stat-label">Wallets</span>
-                    <span class="stat-value" id="navWallets">0</span>
-                </div>
-                <div class="stat-badge">
-                    <span class="stat-label">Difficulty</span>
-                    <span class="stat-value" id="navDifficulty">3</span>
-                </div>
-            </div>
-        </div>
+    <nav class="skip-links" aria-label="Skip links">
+        <a class="skip-link" href="#main-content">Skip to content</a>
+        <a class="skip-link" href="#sidebar-nav">Skip to navigation</a>
     </nav>
 
-    <main class="main-content">
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    The Blockchain<br><span class="gradient-text">Explorer</span>
-                </h1>
-                <p class="hero-subtitle">
-                    Visualize cryptographic immutability and consensus mechanisms in real-time
-                </p>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" onclick="scrollTo('explorer-section')">
-                        Explore Now
+    <div id="a11yAnnouncer" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="connection-banner connection-banner--offline" id="connectionBanner" hidden role="alert">
+        <span class="spinner" aria-hidden="true"></span>
+        <span data-connection-text>Cannot connect to the API server.</span>
+    </div>
+
+    <div class="app-loader" id="appLoader" role="status" aria-live="polite">
+        <div class="app-loader__card">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Connecting to API…</span>
+        </div>
+    </div>
+
+    <div class="app-shell app-shell--loading">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <aside class="sidebar" id="sidebar" aria-label="Site sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-mark" aria-hidden="true"></div>
+                <div>
+                    <span class="brand-title">Chain Explorer</span>
+                    <span class="brand-sub">Developer Dashboard</span>
+                </div>
+            </div>
+
+            <nav class="sidebar__nav" id="sidebar-nav" aria-label="Main navigation">
+                <a href="#overview" class="nav-link nav-link--active" data-view-link="overview">
+                    <span class="nav-icon" aria-hidden="true">◉</span> Overview
+                </a>
+                <a href="#blocks" class="nav-link" data-view-link="blocks">
+                    <span class="nav-icon" aria-hidden="true">▣</span> Blocks
+                </a>
+                <a href="#transactions" class="nav-link" data-view-link="transactions">
+                    <span class="nav-icon" aria-hidden="true">⇄</span> Transactions
+                </a>
+                <a href="#wallets" class="nav-link" data-view-link="wallets">
+                    <span class="nav-icon" aria-hidden="true">◈</span> Wallets
+                </a>
+                <a href="#mining" class="nav-link" data-view-link="mining">
+                    <span class="nav-icon" aria-hidden="true">⚡</span> Mining
+                </a>
+                <a href="#analytics" class="nav-link" data-view-link="analytics">
+                    <span class="nav-icon" aria-hidden="true">◫</span> Analytics
+                </a>
+                <a href="#visualize" class="nav-link" data-view-link="visualize">
+                    <span class="nav-icon" aria-hidden="true">◎</span> Visualize
+                </a>
+                <a href="#learn" class="nav-link" data-view-link="learn">
+                    <span class="nav-icon" aria-hidden="true">◇</span> Learn
+                </a>
+                <a href="#lab" class="nav-link" data-view-link="lab">
+                    <span class="nav-icon" aria-hidden="true">⬡</span> Lab
+                </a>
+            </nav>
+
+            <div class="sidebar__footer">
+                <div class="network-pill" id="networkStatus">
+                    <span class="status-dot" id="chainValid" aria-hidden="true"></span>
+                    <span id="integrityStatus">Connecting…</span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-column">
+            <header class="topbar" role="banner" aria-label="Dashboard header">
+                <button type="button" class="icon-btn topbar__menu" id="menuToggle" aria-label="Open navigation menu" aria-controls="sidebar" aria-expanded="false">
+                    <span aria-hidden="true">☰</span>
+                </button>
+
+                <div class="topbar__metrics" role="group" aria-label="Live network metrics">
+                    <div class="metric-chip">
+                        <span class="metric-label">Blocks</span>
+                        <span class="metric-value" id="navBlocks">—</span>
+                    </div>
+                    <div class="metric-chip">
+                        <span class="metric-label">Wallets</span>
+                        <span class="metric-value" id="navWallets">—</span>
+                    </div>
+                    <div class="metric-chip">
+                        <span class="metric-label">Difficulty</span>
+                        <span class="metric-value" id="navDifficulty">—</span>
+                    </div>
+                    <div class="metric-chip metric-chip--accent">
+                        <span class="metric-label">Pending</span>
+                        <span class="metric-value" id="pendingTxCount">—</span>
+                    </div>
+                </div>
+
+                <div class="topbar__actions">
+                    <button type="button" class="icon-btn" id="contrastToggle" aria-label="Enable high contrast" aria-pressed="false">
+                        <span aria-hidden="true">A+</span>
                     </button>
-                    <button class="btn btn-secondary" onclick="scrollTo('mining-section')">
-                        Start Mining
+                    <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle theme">
+                        <span aria-hidden="true">☀</span>
                     </button>
+                    <a class="btn btn--ghost btn--sm" href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">API Docs<span class="sr-only"> (opens in new tab)</span></a>
                 </div>
-                <div class="scroll-indicator">
-                    <div class="scroll-dot"></div>
-                </div>
-            </div>
-        </section>
+            </header>
 
-        <!-- Network Visualization Section -->
-        <section class="section network-section" id="network-section">
-            <div class="section-header">
-                <h2>Blockchain Network</h2>
-                <p>Live chain visualization with cryptographic verification</p>
-            </div>
-            <div class="blockchain-viz">
-                <div id="blockchainViz" class="chain-container"></div>
-            </div>
-        </section>
+            <main id="main-content" class="main-content" tabindex="-1" role="main">
+                <!-- OVERVIEW -->
+                <section class="view view--active" data-view-panel="overview" id="view-overview" aria-labelledby="overview-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="overview-title">Network Overview</h1>
+                            <p class="page-desc">Live chain health, consensus parameters, and recent activity.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/blockchain" class="edu-learn-link" data-learn-topic="blockchain">Learn: Blockchain</a>
+                                <a href="#learn/consensus" class="edu-learn-link" data-learn-topic="consensus">Learn: Consensus</a>
+                                <a href="#learn/validation" class="edu-learn-link" data-learn-topic="validation">Learn: Validation</a>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn--primary" onclick="validateBlockchain()">Validate chain</button>
+                    </header>
 
-        <!-- Live Explorer Section -->
-        <section class="section explorer-section" id="explorer-section">
-            <div class="section-header">
-                <h2>Live Explorer</h2>
-                <p>Real-time blockchain metadata and transaction tracking</p>
-            </div>
-
-            <div class="explorer-grid">
-                <!-- Chain Status -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>Chain Status</h3>
-                        <div class="status-indicator" id="chainValid">●</div>
+                    <div class="stat-grid" role="group" aria-label="Network statistics">
+                        <article class="stat-card">
+                            <span class="stat-card__label">Total blocks</span>
+                            <span class="stat-card__value" id="total-blocks">—</span>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-card__label">Transactions</span>
+                            <span class="stat-card__value" id="total-transactions">—</span>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-card__label">Wallets</span>
+                            <span class="stat-card__value" id="total-wallets">—</span>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-card__label">Chain status</span>
+                            <span class="stat-card__value badge" id="chain-valid">—</span>
+                        </article>
                     </div>
-                    <div class="panel-content">
-                        <div class="stat-row">
-                            <span>Chain Length</span>
-                            <span class="stat-value" id="chainLength">1</span>
-                        </div>
-                        <div class="stat-row">
-                            <span>Pending TX</span>
-                            <span class="stat-value" id="pendingTxCount">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span>Status</span>
-                            <span class="stat-value" id="integrityStatus">Valid</span>
-                        </div>
-                        <button class="btn btn-accent btn-small" onclick="validateBlockchain()">Validate</button>
-                    </div>
-                </div>
 
-                <!-- Mining Stats -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>Mining Parameters</h3>
-                        <span class="icon">⚙️</span>
+                    <div class="grid-2">
+                        <article class="card">
+                            <div class="card__header">
+                                <h2 class="card__title">Latest block</h2>
+                            </div>
+                            <div class="card__body">
+                                <div class="hash-row">
+                                    <code class="mono truncate" id="lastBlockHash">—</code>
+                                    <button type="button" class="icon-btn icon-btn--sm" onclick="copyHash('lastBlockHash')" aria-label="Copy hash">⎘</button>
+                                </div>
+                                <dl class="detail-list">
+                                    <div><dt>Index</dt><dd id="lastBlockIndex">—</dd></div>
+                                    <div><dt>Nonce</dt><dd id="lastBlockNonce">—</dd></div>
+                                    <div><dt>Chain length</dt><dd id="chainLength">—</dd></div>
+                                </dl>
+                            </div>
+                        </article>
+
+                        <article class="card">
+                            <div class="card__header">
+                                <h2 class="card__title">Consensus</h2>
+                            </div>
+                            <div class="card__body">
+                                <dl class="detail-list">
+                                    <div><dt>Difficulty</dt><dd id="statsdifficulty">—</dd></div>
+                                    <div><dt>Block reward</dt><dd><span id="statsReward">—</span> coins</dd></div>
+                                    <div><dt>Network value</dt><dd id="totalValue">—</dd></div>
+                                </dl>
+                                <div class="inline-form">
+                                    <label class="sr-only" for="difficultyInput">Mining difficulty</label>
+                                    <input type="number" id="difficultyInput" class="input" min="1" max="7" value="3" placeholder="Difficulty">
+                                    <button type="button" class="btn btn--secondary btn--sm" onclick="setDifficulty()">Update</button>
+                                </div>
+                            </div>
+                        </article>
                     </div>
-                    <div class="panel-content">
-                        <div class="stat-row">
-                            <span>Difficulty</span>
-                            <span class="stat-value" id="statsdifficulty">3</span>
+
+                    <article class="card">
+                        <div class="card__header">
+                            <h2 class="card__title">Chain preview</h2>
+                            <a href="#blocks" class="text-link" data-view-link="blocks">View all blocks →</a>
                         </div>
-                        <div class="stat-row">
-                            <span>Block Reward</span>
-                            <span class="stat-value" id="statsReward">10.0</span>
+                        <div class="card__body card__body--flush">
+                            <div class="chain-strip" id="blockchainViz" role="img" aria-label="Block chain preview showing the most recent blocks"></div>
                         </div>
-                        <div class="stat-row">
-                            <span>Network Value</span>
-                            <span class="stat-value" id="totalValue">0</span>
+                    </article>
+
+                    <article class="card">
+                        <div class="card__header">
+                            <h2 class="card__title">Validation</h2>
                         </div>
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <label style="font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Adjust Difficulty</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="number" id="difficultyInput" placeholder="1-7" class="glass-input" min="1" max="7" value="3" style="flex: 1;">
-                                <button class="btn btn-small" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="setDifficulty()">Set</button>
+                        <div class="card__body" id="validationResults">
+                            <p class="text-muted">Run validation to inspect chain integrity.</p>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- BLOCKS -->
+                <section class="view" data-view-panel="blocks" id="view-blocks" hidden aria-hidden="true" aria-labelledby="blocks-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="blocks-title">Blocks</h1>
+                            <p class="page-desc">Canonical block history with hashes, miners, and transaction counts.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/blocks" class="edu-learn-link" data-learn-topic="blocks">Learn: Blocks</a>
+                                <a href="#learn/genesis" class="edu-learn-link" data-learn-topic="genesis">Learn: Genesis</a>
+                                <a href="#learn/hashing" class="edu-learn-link" data-learn-topic="hashing">Learn: Hashing</a>
+                            </div>
+                        </div>
+                    </header>
+                    <article class="card">
+                        <div class="table-wrap virtual-scroll" id="blocksVirtualScroll">
+                            <table class="data-table">
+                                <caption class="caption-visually-hidden">Canonical block history sorted by newest first</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Block</th>
+                                        <th scope="col">Hash</th>
+                                        <th scope="col">Txs</th>
+                                        <th scope="col">Miner</th>
+                                        <th scope="col">Nonce</th>
+                                        <th scope="col">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blocksTableBody">
+                                    <tr><td colspan="6" class="empty-cell">Loading blocks…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- TRANSACTIONS -->
+                <section class="view" data-view-panel="transactions" id="view-transactions" hidden aria-hidden="true" aria-labelledby="transactions-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="transactions-title">Transactions</h1>
+                            <p class="page-desc">Pending mempool transfers and submission.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/transactions" class="edu-learn-link" data-learn-topic="transactions">Learn: Transactions</a>
+                                <a href="#learn/mempool" class="edu-learn-link" data-learn-topic="mempool">Learn: Mempool</a>
+                                <a href="#learn/signatures" class="edu-learn-link" data-learn-topic="signatures">Learn: Signatures</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="grid-2 grid-2--wide">
+                        <article class="card">
+                            <div class="card__header"><h2 class="card__title">Send transfer</h2></div>
+                            <div class="card__body">
+                                <form class="form-stack" onsubmit="event.preventDefault(); submitTransaction();">
+                                    <div class="field">
+                                        <label for="senderSelect">From</label>
+                                        <select id="senderSelect" class="input"><option value="">Select sender</option></select>
+                                    </div>
+                                    <div class="field">
+                                        <label for="receiverSelect">To</label>
+                                        <select id="receiverSelect" class="input"><option value="">Select receiver</option></select>
+                                    </div>
+                                    <div class="field">
+                                        <label for="txAmount">Amount</label>
+                                        <input type="number" id="txAmount" class="input" step="0.01" min="0.01" placeholder="0.00">
+                                    </div>
+                                    <button type="submit" class="btn btn--primary">Submit to mempool</button>
+                                </form>
+                            </div>
+                        </article>
+
+                        <article class="card">
+                            <div class="card__header"><h2 class="card__title">Mempool</h2></div>
+                            <div class="card__body card__body--flush">
+                                <div class="table-wrap">
+                                    <table class="data-table data-table--compact">
+                                        <caption class="caption-visually-hidden">Pending transactions in the mempool</caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">From</th>
+                                                <th scope="col">To</th>
+                                                <th scope="col">Amount</th>
+                                                <th scope="col">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactionList">
+                                            <tr><td colspan="4" class="empty-cell">No pending transactions</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- WALLETS -->
+                <section class="view" data-view-panel="wallets" id="view-wallets" hidden aria-hidden="true" aria-labelledby="wallets-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="wallets-title">Wallets</h1>
+                            <p class="page-desc">ECDSA identities and balances on the simulator chain.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/wallets" class="edu-learn-link" data-learn-topic="wallets">Learn: Wallets</a>
+                                <a href="#learn/signatures" class="edu-learn-link" data-learn-topic="signatures">Learn: Signatures</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <article class="card card--inline">
+                        <div class="card__body">
+                            <div class="inline-form inline-form--grow">
+                                <label class="sr-only" for="walletName">Wallet name</label>
+                                <input type="text" id="walletName" class="input" maxlength="30" placeholder="Name (e.g. Alice)">
+                                <button type="button" class="btn btn--primary" onclick="createWallet()">Create wallet</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <div class="wallet-grid" id="walletsGrid">
+                        <div class="empty-state">No wallets yet. Create one to begin.</div>
+                    </div>
+                </section>
+
+                <!-- MINING -->
+                <section class="view" data-view-panel="mining" id="view-mining" hidden aria-hidden="true" aria-labelledby="mining-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="mining-title">Mining</h1>
+                            <p class="page-desc">Proof-of-Work block production and performance metrics.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/mining" class="edu-learn-link" data-learn-topic="mining">Learn: Mining</a>
+                                <a href="#learn/hashing" class="edu-learn-link" data-learn-topic="hashing">Learn: Hashing</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="grid-2">
+                        <article class="card">
+                            <div class="card__header"><h2 class="card__title">Mine block</h2></div>
+                            <div class="card__body">
+                                <div class="field">
+                                    <label for="minerSelect">Miner wallet</label>
+                                    <select id="minerSelect" class="input"><option value="">Select miner</option></select>
+                                </div>
+                                <button type="button" class="btn btn--primary" onclick="mineBlock()">Start mining</button>
+                                <p class="hint">Higher difficulty increases PoW search time.</p>
+                            </div>
+                        </article>
+
+                        <article class="card">
+                            <div class="card__header"><h2 class="card__title">Last mine stats</h2></div>
+                            <div class="card__body">
+                                <div class="stat-grid stat-grid--compact">
+                                    <div class="mini-stat"><span class="mini-stat__label">Nonce</span><span class="mini-stat__value" id="currentNonce">0</span></div>
+                                    <div class="mini-stat"><span class="mini-stat__label">Attempts</span><span class="mini-stat__value" id="hashAttempts">0</span></div>
+                                    <div class="mini-stat"><span class="mini-stat__label">Duration</span><span class="mini-stat__value" id="miningTime">0s</span></div>
+                                </div>
+                                <code class="mono block" id="currentHash">Awaiting mine…</code>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- ANALYTICS -->
+                <section class="view" data-view-panel="analytics" id="view-analytics" hidden aria-hidden="true" aria-labelledby="analytics-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="analytics-title">Analytics</h1>
+                            <p class="page-desc">Network performance, mining economics, and synchronization metrics.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/sync" class="edu-learn-link" data-learn-topic="sync">Learn: Sync</a>
+                                <a href="#learn/peers" class="edu-learn-link" data-learn-topic="peers">Learn: Peers</a>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn--secondary btn--sm" id="refreshAnalytics">Refresh</button>
+                    </header>
+
+                    <div class="analytics-kpi-grid" id="analyticsKpis">
+                        <article class="kpi-card"><span class="kpi-label">Chain height</span><span class="kpi-value" id="kpiChainHeight">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Total blocks</span><span class="kpi-value" id="kpiTotalBlocks">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Avg block time</span><span class="kpi-value" id="kpiBlockTime">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Tx throughput</span><span class="kpi-value" id="kpiThroughput">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Pending txs</span><span class="kpi-value" id="kpiPending">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Wallets</span><span class="kpi-value" id="kpiWallets">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Peers</span><span class="kpi-value" id="kpiPeers">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Hash rate (est.)</span><span class="kpi-value" id="kpiHashRate">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Difficulty</span><span class="kpi-value" id="kpiDifficulty">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Block rewards</span><span class="kpi-value" id="kpiRewards">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Storage</span><span class="kpi-value" id="kpiStorage">—</span></article>
+                        <article class="kpi-card"><span class="kpi-label">Node uptime</span><span class="kpi-value" id="kpiUptime">—</span></article>
+                    </div>
+
+                    <div class="analytics-health card">
+                        <div class="card__body analytics-health__body">
+                            <div class="analytics-health__item">
+                                <span class="kpi-label">Network health</span>
+                                <span class="badge" id="kpiHealth">—</span>
+                            </div>
+                            <div class="analytics-health__item analytics-health__item--grow">
+                                <div class="sync-header">
+                                    <span class="kpi-label">Synchronization</span>
+                                    <span class="text-muted" id="kpiSyncLabel">—</span>
+                                </div>
+                                <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="syncProgressBar">
+                                    <div class="progress-fill" id="syncProgressFill"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Last Block -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>Last Block</h3>
-                        <span class="icon">📦</span>
+                    <div class="analytics-charts">
+                        <article class="card chart-card chart-card--wide">
+                            <div class="card__header"><h2 class="card__title">Chain growth</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartChainGrowth" aria-label="Cumulative transactions over blocks"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Block time</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartBlockTime" aria-label="Block interval times"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Transaction throughput</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartThroughput" aria-label="Transactions per block"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Mempool activity</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartMempool" aria-label="Pending transaction history"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Hash rate &amp; difficulty</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartHashRate" aria-label="Estimated hash rate and difficulty"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Block rewards</h2></div>
+                            <div class="card__body chart-wrap"><canvas id="chartRewards" aria-label="Mining rewards per block"></canvas></div>
+                        </article>
+
+                        <article class="card chart-card">
+                            <div class="card__header"><h2 class="card__title">Miner distribution</h2></div>
+                            <div class="card__body miner-distribution">
+                                <div class="miner-distribution__chart chart-wrap chart-wrap--square">
+                                    <canvas id="chartMiners" aria-label="Blocks mined by miner"></canvas>
+                                </div>
+                                <ol class="miner-legend-list" id="minerDistributionList" aria-label="Miners ranked by blocks mined"></ol>
+                            </div>
+                        </article>
                     </div>
-                    <div class="panel-content">
-                        <div class="hash-display">
-                            <span id="lastBlockHash"class="hash-value">0x000...</span>
-                            <button class="btn-copy" onclick="copyHash('lastBlockHash')">📋</button>
+                </section>
+
+                <!-- VISUALIZE -->
+                <section class="view" data-view-panel="visualize" id="view-visualize" hidden aria-hidden="true" aria-labelledby="visualize-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="visualize-title">Visualize</h1>
+                            <p class="page-desc">Interactive explanations of blockchain concepts — powered by your live chain where possible.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn" class="edu-learn-link">Read full explanations in Learn →</a>
+                            </div>
                         </div>
-                        <div class="stat-row">
-                            <span>Index</span>
-                            <span class="stat-value" id="lastBlockIndex">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span>Nonce</span>
-                            <span class="stat-value" id="lastBlockNonce">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+                    </header>
 
-        <!-- Transaction Stream -->
-        <section class="section transaction-section" id="transaction-section">
-            <div class="section-header">
-                <h2>Transaction Stream</h2>
-                <p>Pending and confirmed transactions across the network</p>
-            </div>
-            <div class="transaction-list" id="transactionList">
-                <div class="empty-state">No transactions yet</div>
-            </div>
-        </section>
+                    <div class="viz-layout">
+                        <nav class="viz-topics" aria-label="Visualization topics">
+                            <button type="button" class="viz-topic viz-topic--active" data-viz-topic="structure">Blockchain structure</button>
+                            <button type="button" class="viz-topic" data-viz-topic="genesis">Genesis block</button>
+                            <button type="button" class="viz-topic" data-viz-topic="linking">Block linking</button>
+                            <button type="button" class="viz-topic" data-viz-topic="hashing">Hash chaining</button>
+                            <button type="button" class="viz-topic" data-viz-topic="merkle">Merkle trees</button>
+                            <button type="button" class="viz-topic" data-viz-topic="tx-lifecycle">Transaction lifecycle</button>
+                            <button type="button" class="viz-topic" data-viz-topic="signing">Wallet signing</button>
+                            <button type="button" class="viz-topic" data-viz-topic="consensus">Consensus process</button>
+                            <button type="button" class="viz-topic" data-viz-topic="mining">Mining / validation</button>
+                            <button type="button" class="viz-topic" data-viz-topic="sync">Peer synchronization</button>
+                            <button type="button" class="viz-topic" data-viz-topic="topology">Network topology</button>
+                            <button type="button" class="viz-topic" data-viz-topic="fork">Fork resolution</button>
+                            <button type="button" class="viz-topic" data-viz-topic="mempool">Mempool</button>
+                        </nav>
 
-        <!-- Wallet Ecosystem -->
-        <section class="section wallet-section" id="wallet-section">
-            <div class="section-header">
-                <h2>Wallet Ecosystem</h2>
-                <p>Create and manage blockchain identities</p>
-            </div>
+                        <div class="viz-stage">
+                            <article class="card viz-panel viz-panel--active" data-viz-panel="structure">
+                                <div class="card__header"><h2 class="card__title">Blockchain structure</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Click any block to inspect its header fields. Your live chain is rendered below.</p>
+                                    <div class="viz-chain" id="vizStructureChain"></div>
+                                    <div class="viz-detail" id="vizStructureDetail"></div>
+                                </div>
+                            </article>
 
-            <div class="wallet-controls">
-                <div class="glass-panel">
-                    <h3>Create Wallet</h3>
-                    <div class="form-group">
-                        <input type="text" id="walletName" placeholder="Wallet name (e.g., Alice)" class="glass-input" maxlength="30">
-                        <button class="btn btn-primary" onclick="createWallet()">Generate Wallet</button>
-                    </div>
-                </div>
-            </div>
+                            <article class="card viz-panel" data-viz-panel="genesis">
+                                <div class="card__header"><h2 class="card__title">Genesis block</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">The first block anchors the chain. Its previous hash is a fixed sentinel — not a real prior block.</p>
+                                    <div id="vizGenesisContent"></div>
+                                </div>
+                            </article>
 
-            <div class="wallets-grid" id="walletsGrid">
-                <div class="empty-state">No wallets created yet. Create one to start.</div>
-            </div>
-        </section>
+                            <article class="card viz-panel" data-viz-panel="linking">
+                                <div class="card__header"><h2 class="card__title">Block linking</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Each block stores the hash of its predecessor, forming an immutable linked list.</p>
+                                    <svg class="viz-link-svg" id="vizLinkSvg" aria-hidden="true"></svg>
+                                    <div id="vizLinkLabels"></div>
+                                </div>
+                            </article>
 
-        <!-- Create Transaction -->
-        <section class="section transaction-create-section" id="transaction-create-section">
-            <div class="section-header">
-                <h2>Create Transaction</h2>
-                <p>Transfer value between wallets and add to the pending pool</p>
-            </div>
+                            <article class="card viz-panel" data-viz-panel="hashing">
+                                <div class="card__header"><h2 class="card__title">Hash chaining</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Altering any block changes its hash, breaking the link to the next block. Try the tamper demo.</p>
+                                    <div class="viz-hash-demo" id="vizHashDemo"></div>
+                                    <div class="viz-controls">
+                                        <button type="button" class="btn btn--warning btn--sm" id="vizTamperDemo">Simulate tamper</button>
+                                        <button type="button" class="btn btn--secondary btn--sm" id="vizResetHash">Reset</button>
+                                    </div>
+                                </div>
+                            </article>
 
-            <div class="glass-panel">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>From Wallet</label>
-                        <select id="senderSelect" class="glass-input">
-                            <option value="">Select sender</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>To Wallet</label>
-                        <select id="receiverSelect" class="glass-input">
-                            <option value="">Select receiver</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Amount</label>
-                        <input type="number" id="txAmount" placeholder="0.00" class="glass-input" step="0.01" min="0.01">
-                    </div>
-                    <button class="btn btn-primary" onclick="submitTransaction()">Send Transaction</button>
-                </div>
-            </div>
-        </section>
+                            <article class="card viz-panel" data-viz-panel="merkle">
+                                <div class="card__header"><h2 class="card__title">Merkle trees</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Educational demo: transactions are hashed pairwise up to a root. This simulator stores a flat tx list in block hashes — Merkle roots are not in headers yet.</p>
+                                    <div class="viz-merkle" id="vizMerkleTree"></div>
+                                    <p class="viz-note">Root hash summarizes all transactions — changing one leaf changes the root.</p>
+                                </div>
+                            </article>
 
-        <!-- Mining Center -->
-        <section class="section mining-section" id="mining-section">
-            <div class="section-header">
-                <h2>Mining Center</h2>
-                <p>Proof-of-Work consensus and block creation</p>
-            </div>
+                            <article class="card viz-panel" data-viz-panel="tx-lifecycle">
+                                <div class="card__header"><h2 class="card__title">Transaction lifecycle</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">From creation to confirmation — how a transfer moves through this simulator.</p>
+                                    <div class="viz-stepper" id="vizTxSteps">
+                                        <div class="viz-step viz-step--active">1. Create</div>
+                                        <div class="viz-step">2. Sign (ECDSA)</div>
+                                        <div class="viz-step">3. Broadcast</div>
+                                        <div class="viz-step">4. Mempool</div>
+                                        <div class="viz-step">5. Mine block</div>
+                                        <div class="viz-step">6. Confirm</div>
+                                    </div>
+                                    <div class="viz-controls">
+                                        <button type="button" class="btn btn--primary btn--sm" id="vizPlayTxLifecycle">Play animation</button>
+                                    </div>
+                                </div>
+                            </article>
 
-            <div class="mining-container">
-                <div class="glass-panel">
-                    <h3>Start Mining</h3>
-                    <div class="form-group">
-                        <label>Select Miner Wallet</label>
-                        <select id="minerSelect" class="glass-input">
-                            <option value="">Create a wallet first</option>
-                        </select>
-                        <button class="btn btn-accent" onclick="mineBlock()">Begin Mining</button>
-                    </div>
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 0.5rem;">💡 <strong>Tip:</strong> Higher difficulty takes longer to mine!</p>
-                    </div>
-                </div>
+                            <article class="card viz-panel" data-viz-panel="signing">
+                                <div class="card__header"><h2 class="card__title">Wallet signing</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">ECDSA proves you own the sender address without revealing your private key.</p>
+                                    <div class="viz-flow-diagram viz-flow-step">
+                                        <div class="viz-flow-node">Private key</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">Sign tx hash</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">Signature</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">Verify with pubkey</div>
+                                    </div>
+                                    <p class="viz-note">The backend signs transactions server-side when you submit via the dashboard. Validators check signature + balance before accepting into the mempool.</p>
+                                </div>
+                            </article>
 
-                <div class="glass-panel">
-                    <h3>Mining Statistics</h3>
-                    <div class="mining-stats">
-                        <div class="mining-stat">
-                            <span class="label">Current Nonce</span>
-                            <span class="value" id="currentNonce">0</span>
-                        </div>
-                        <div class="mining-stat">
-                            <span class="label">Hash Attempts</span>
-                            <span class="value" id="hashAttempts">0</span>
-                        </div>
-                        <div class="mining-stat">
-                            <span class="label">Mining Time</span>
-                            <span class="value" id="miningTime">0s</span>
-                        </div>
-                    </div>
-                    <div class="hash-display">
-                        <span id="currentHash" class="hash-value">Ready</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+                            <article class="card viz-panel" data-viz-panel="consensus">
+                                <div class="card__header"><h2 class="card__title">Consensus process</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Proof-of-Work: miners compete to find a hash below the difficulty target. The longest valid chain wins.</p>
+                                    <div class="viz-flow-diagram">
+                                        <div class="viz-flow-node">Propose block</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">PoW (nonce)</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">Validate</div>
+                                        <span class="viz-flow-arrow">→</span>
+                                        <div class="viz-flow-node">Append</div>
+                                    </div>
+                                    <p class="viz-note" id="vizConsensusState">—</p>
+                                </div>
+                            </article>
 
-        <!-- Security Laboratory -->
-        <section class="section security-section" id="security-section">
-            <div class="section-header">
-                <h2>Security Laboratory</h2>
-                <p>Interactive demonstrations of blockchain security principles</p>
-            </div>
+                            <article class="card viz-panel" data-viz-panel="mining">
+                                <div class="card__header"><h2 class="card__title">Mining / validation</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Watch nonce increment until the hash starts with enough leading zeros (difficulty 3 in this simulator).</p>
+                                    <div class="viz-mining">
+                                        <div class="kpi-label">Nonce</div>
+                                        <div class="viz-mining-nonce" id="vizMiningNonce">0</div>
+                                        <div class="viz-mining-hash" id="vizMiningHash">—</div>
+                                    </div>
+                                    <div class="viz-controls">
+                                        <button type="button" class="btn btn--primary btn--sm" id="vizStartMining">Start mining</button>
+                                        <button type="button" class="btn btn--secondary btn--sm" id="vizStopMining">Stop</button>
+                                    </div>
+                                </div>
+                            </article>
 
-            <div class="lab-grid">
-                <!-- Validation Demo -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>Chain Validation</h3>
-                        <span>🔍</span>
-                    </div>
-                    <div id="validationResults" class="validation-results">
-                        <p>Click validate to check chain integrity</p>
-                    </div>
-                    <button class="btn btn-accent" onclick="validateBlockchain()">Run Validation</button>
-                </div>
+                            <article class="card viz-panel" data-viz-panel="sync">
+                                <div class="card__header"><h2 class="card__title">Peer synchronization</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Nodes exchange chains via HTTP and adopt the longest valid chain.</p>
+                                    <p class="text-muted" id="vizSyncStatus">—</p>
+                                    <div id="vizSyncAnimation"></div>
+                                    <div class="viz-controls">
+                                        <button type="button" class="btn btn--primary btn--sm" id="vizSyncPeers">Sync with peers</button>
+                                    </div>
+                                </div>
+                            </article>
 
-                <!-- Tampering Demo -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h3>Tampering Detection</h3>
-                        <span>⚠️</span>
-                    </div>
-                    <div class="form-group">
-                        <label>Block Index</label>
-                        <input type="number" id="tamperBlockIndex" placeholder="0" class="glass-input" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Transaction Index</label>
-                        <input type="number" id="tamperTxIndex" placeholder="0" class="glass-input" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>New Amount</label>
-                        <input type="number" id="tamperAmount" placeholder="100" class="glass-input">
-                    </div>
-                    <button class="btn btn-warning" onclick="performTamper()">Demonstrate Tampering</button>
-                </div>
-            </div>
+                            <article class="card viz-panel" data-viz-panel="topology">
+                                <div class="card__header"><h2 class="card__title">Network topology</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Registered peers orbit this node. Add peers via the API or Mining view.</p>
+                                    <div class="viz-network">
+                                        <div class="viz-network-hub">This node</div>
+                                        <div class="viz-network-orbit" id="vizNetworkOrbit"></div>
+                                    </div>
+                                </div>
+                            </article>
 
-            <div id="tamperResults" class="tamper-results hidden">
-                <div class="glass-panel">
-                    <h3>Tampering Results</h3>
-                    <div id="tamperComparison"></div>
-                </div>
-            </div>
-        </section>
+                            <article class="card viz-panel" data-viz-panel="fork">
+                                <div class="card__header"><h2 class="card__title">Fork resolution</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">When two valid chains diverge, nodes follow the longest chain rule.</p>
+                                    <div class="viz-fork">
+                                        <div class="viz-fork-chain">
+                                            <strong>Honest chain</strong>
+                                            <div class="viz-fork-blocks" id="vizForkHonest"></div>
+                                        </div>
+                                        <div class="viz-fork-chain viz-fork-chain--alt">
+                                            <strong>Attacker chain (longer)</strong>
+                                            <div class="viz-fork-blocks" id="vizForkAlt"></div>
+                                        </div>
+                                    </div>
+                                    <div class="viz-controls">
+                                        <button type="button" class="btn btn--warning btn--sm" id="vizPlayFork">Resolve fork</button>
+                                    </div>
+                                </div>
+                            </article>
 
-        <!-- 51% Attack Simulator -->
-        <section class="section attack-section" id="attack-section">
-            <div class="section-header">
-                <h2>51% Attack Simulator</h2>
-                <p>Visualize how majority hash power can compromise consensus</p>
-            </div>
-
-            <div class="glass-panel">
-                <div class="attack-visualization" id="attackViz">
-                    <div class="network-visualization">
-                        <div class="network-side honest">
-                            <h4>Honest Network (40%)</h4>
-                            <div class="chain-race" id="honestChain"></div>
-                        </div>
-                        <div class="network-side attacker">
-                            <h4>Attacker (60%)</h4>
-                            <div class="chain-race" id="attackerChain"></div>
+                            <article class="card viz-panel" data-viz-panel="mempool">
+                                <div class="card__header"><h2 class="card__title">Mempool</h2></div>
+                                <div class="card__body">
+                                    <p class="viz-caption">Pending transactions wait here until a miner includes them in a block. Count: <strong id="vizMempoolCount">0</strong></p>
+                                    <div class="viz-mempool-pool" id="vizMempoolPool"></div>
+                                </div>
+                            </article>
                         </div>
                     </div>
-                </div>
-                <button class="btn btn-warning" onclick="simulate51Attack()">Start Attack Simulation</button>
-            </div>
+                </section>
 
-            <div id="attackResults" class="attack-results hidden">
-                <div class="glass-panel">
-                    <h3>Attack Results</h3>
-                    <div id="attackResultsContent"></div>
-                </div>
-            </div>
-        </section>
+                <!-- LEARN -->
+                <section class="view" data-view-panel="learn" id="view-learn" hidden aria-hidden="true" aria-labelledby="learn-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="learn-title">Learn</h1>
+                            <p class="page-desc">Beginner-friendly guides to every major concept — what it is, why it matters, and how this simulator implements it.</p>
+                        </div>
+                    </header>
 
-        <!-- System Controls -->
-        <section class="section controls-section" id="controls-section">
-            <div class="section-header">
-                <h2>System Controls</h2>
-            </div>
-            <div class="glass-panel">
-                <button class="btn btn-danger" onclick="resetBlockchain()">Reset Blockchain to Genesis</button>
-            </div>
-        </section>
-    </main>
+                    <div class="edu-layout">
+                        <nav class="edu-nav" id="eduTopicList" aria-label="Concept topics"></nav>
+                        <div id="eduContent"></div>
+                    </div>
+                </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>Blockchain Explorer © 2026 • Educational Cryptocurrency Simulator</p>
-            <p>Built with ECDSA cryptography, Proof-of-Work consensus, and SHA-256 hashing</p>
+                <!-- LAB -->
+                <section class="view" data-view-panel="lab" id="view-lab" hidden aria-hidden="true" aria-labelledby="lab-title">
+                    <header class="page-header">
+                        <div>
+                            <h1 class="page-title" id="lab-title">Security Lab</h1>
+                            <p class="page-desc">Interactive threat simulations — explore attacks, mitigations, and best practices step by step.</p>
+                            <div class="page-header__meta">
+                                <a href="#learn/immutability" class="edu-learn-link" data-learn-topic="immutability">Learn: Immutability</a>
+                                <a href="#learn/forks" class="edu-learn-link" data-learn-topic="forks">Learn: Forks</a>
+                                <a href="#learn/consensus" class="edu-learn-link" data-learn-topic="consensus">Learn: Consensus</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="lab-layout">
+                        <nav class="lab-topics" id="labTopicList" aria-label="Security topics"></nav>
+                        <div class="lab-stage" id="labStage" aria-live="polite"></div>
+                    </div>
+
+                    <article class="card card--danger lab-footer-actions">
+                        <div class="card__header"><h2 class="card__title">System reset</h2></div>
+                        <div class="card__body">
+                            <p class="text-muted">Reset the chain to genesis and clear wallets. This cannot be undone.</p>
+                            <button type="button" class="btn btn--danger" id="labResetBtn">Reset blockchain</button>
+                        </div>
+                    </article>
+                </section>
+            </main>
+
+            <footer class="site-footer" role="contentinfo">
+                <p>Chain Explorer · Educational simulator · ECDSA · SHA-256 · PoW</p>
+            </footer>
         </div>
-    </footer>
+    </div>
 
-    <script src="app.js"></script>
+    <div class="toast-root" id="toastRoot" aria-live="polite" aria-relevant="additions"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/errors.js"></script>
+    <script src="js/hooks.js"></script>
+    <script src="js/cache.js"></script>
+    <script src="js/scheduler.js"></script>
+    <script src="js/render-utils.js"></script>
+    <script src="js/virtual-list.js"></script>
+    <script src="js/ui-states.js"></script>
+    <script src="js/connection.js"></script>
+    <script src="js/module-loader.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/devtools.js"></script>
+    <script src="js/accessibility.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

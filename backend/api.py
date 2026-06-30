@@ -7,12 +7,17 @@ separation of concerns, type safety, and comprehensive error handling.
 API Documentation available at: /docs (Swagger UI) or /redoc (ReDoc)
 """
 
-import logging
+import time
 
-from fastapi import Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .config import CONFIG, get_config
+from .exceptions import AppError
+from .logging_config import configure_logging, get_logger
+from .middleware import RequestLoggingMiddleware
+from .settings import SETTINGS
 from .models import (
     CreateWalletRequest,
     CreateTransactionRequest,
@@ -20,6 +25,8 @@ from .models import (
     SetDifficultyRequest,
     TamperBlockRequest,
     Attack51Request,
+    RegisterPeerRequest,
+    SyncResponse,
     WalletResponse,
     TransactionResponse,
     BlockResponse,
@@ -29,20 +36,26 @@ from .models import (
     TamperResultResponse,
     Attack51ResultResponse,
     HealthResponse,
+    AnalyticsResponse,
 )
 from .services import (
+    AnalyticsService,
     BlockchainService,
     WalletService,
     TransactionService,
     MiningService,
     AttackService,
     TamperService,
+    SyncService,
 )
 from .utils import (
     get_current_timestamp,
-    logger,
     serialize_block,
+    serialize_block_summary,
 )
+
+logger = configure_logging()
+api_logger = get_logger("api")
 
 
 # ============================================================================
@@ -61,29 +74,36 @@ app = FastAPI(
 # Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=SETTINGS.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+app.add_middleware(RequestLoggingMiddleware)
 
 
 # ============================================================================
 # Service Initialization
 # ============================================================================
 
-blockchain_service = BlockchainService(difficulty=3, mining_reward=10.0)
-wallet_service = WalletService()
+SERVER_STARTED_AT = time.time()
+
+blockchain_service = BlockchainService(
+    difficulty=CONFIG.initial_difficulty,
+    mining_reward=CONFIG.mining_reward,
+)
+wallet_service = WalletService(blockchain_service)
 transaction_service = TransactionService(blockchain_service, wallet_service)
 mining_service = MiningService(blockchain_service, wallet_service)
 attack_service = AttackService(blockchain_service, wallet_service)
 tamper_service = TamperService(blockchain_service)
+sync_service = SyncService(blockchain_service)
+analytics_service = AnalyticsService(
+    blockchain_service,
+    wallet_service,
+    sync_service,
+    SERVER_STARTED_AT,
+)
 
 
 # ============================================================================
@@ -98,11 +118,58 @@ tamper_service = TamperService(blockchain_service)
 )
 def health_check() -> HealthResponse:
     """Get API health status."""
+    now = get_current_timestamp()
     return HealthResponse(
         status="healthy",
         version="2.0.0",
-        timestamp=get_current_timestamp(),
+        timestamp=now,
+        uptime_seconds=round(now - SERVER_STARTED_AT, 1),
+        server_started_at=SERVER_STARTED_AT,
     )
+
+
+@app.get(
+    "/config",
+    summary="Public Configuration",
+    description="Non-sensitive runtime configuration for clients and developers",
+)
+def get_public_config():
+    """Expose safe configuration values."""
+    return {
+        "success": True,
+        "config": get_config(),
+        "features": {
+            "persistence": CONFIG.persistence_enabled,
+            "peer_sync": True,
+            "analytics": True,
+        },
+    }
+
+
+@app.get(
+    "/debug/info",
+    summary="Debug Information",
+    description="Detailed diagnostics — only available when CHAIN_DEBUG=true",
+    include_in_schema=SETTINGS.debug,
+)
+def debug_info():
+    """Return diagnostic info for developers (debug mode only)."""
+    if not SETTINGS.debug:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    chain = blockchain_service.blockchain
+    return {
+        "debug": True,
+        "chain_length": len(chain.chain),
+        "mempool_size": len(chain.pending_transactions),
+        "peer_count": len(sync_service.list_peers()),
+        "wallet_count": len(wallet_service.get_all_wallets()),
+        "difficulty": chain.difficulty,
+        "data_dir": str(CONFIG.data_dir),
+        "persistence_enabled": CONFIG.persistence_enabled,
+        "log_level": SETTINGS.log_level,
+        "uptime_seconds": round(get_current_timestamp() - SERVER_STARTED_AT, 1),
+    }
 
 
 @app.get(
@@ -124,7 +191,9 @@ def root():
             "transactions": "/transactions",
             "wallets": "/wallets",
             "stats": "/stats",
+            "analytics": "/analytics",
             "validate": "/validate",
+            "config": "/config",
         },
     }
 
@@ -148,12 +217,24 @@ def get_chain() -> BlockchainStatusResponse:
 @app.get(
     "/blocks",
     summary="Get All Blocks",
-    description="Retrieve all blocks in the blockchain",
+    description="Retrieve blocks. Use summary=true for lightweight payloads without transaction bodies.",
 )
-def get_blocks():
-    """Get all blocks in the blockchain."""
+def get_blocks(
+    summary: bool = Query(False, description="Omit full transaction data"),
+    limit: int | None = Query(None, ge=1, le=2000, description="Max blocks to return"),
+    offset: int = Query(0, ge=0, description="Skip first N blocks"),
+):
+    """Get blockchain blocks with optional pagination and summary mode."""
     blocks = blockchain_service.get_blocks()
-    return [serialize_block(block) for block in blocks]
+    serializer = serialize_block_summary if summary else serialize_block
+    result = [serializer(block) for block in blocks]
+
+    if limit is not None:
+        result = result[offset: offset + limit]
+    elif offset:
+        result = result[offset:]
+
+    return result
 
 
 @app.get(
@@ -176,12 +257,24 @@ def get_block(block_index: int):
     summary="Get Blockchain Statistics",
     description="Get comprehensive blockchain statistics",
 )
-def get_stats() -> BlockchainStatsResponse:
+def get_stats(response: Response) -> BlockchainStatsResponse:
     """Get blockchain statistics."""
+    response.headers["Cache-Control"] = "private, max-age=1"
     stats = blockchain_service.get_chain_stats()
-    # Add wallet count to stats
     stats["total_wallets"] = len(wallet_service.get_all_wallets())
     return BlockchainStatsResponse(**stats)
+
+
+@app.get(
+    "/analytics",
+    response_model=AnalyticsResponse,
+    summary="Get Analytics Dashboard Data",
+    description="Aggregated metrics and chart series for the analytics dashboard",
+)
+def get_analytics() -> AnalyticsResponse:
+    """Get analytics dashboard payload."""
+    data = analytics_service.get_analytics()
+    return AnalyticsResponse(**data)
 
 
 @app.get(
@@ -368,6 +461,43 @@ def attack_51_percent(
 
 
 # ============================================================================
+# Network Endpoints
+# ============================================================================
+
+@app.get(
+    "/peers",
+    summary="List Peer Nodes",
+    description="List registered peer node URLs for HTTP chain sync",
+)
+def list_peers():
+    return {"peers": sync_service.list_peers()}
+
+
+@app.post(
+    "/peers/register",
+    summary="Register Peer Node",
+    description="Register another simulator instance for chain synchronization",
+)
+def register_peer(request: RegisterPeerRequest):
+    try:
+        peers = sync_service.register_peer(request.peer_url)
+        return {"success": True, "peers": peers}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post(
+    "/network/sync",
+    response_model=SyncResponse,
+    summary="Synchronize With Peers",
+    description="Adopt the longest valid chain from registered peers",
+)
+def sync_network() -> SyncResponse:
+    result = sync_service.sync_with_peers()
+    return SyncResponse(**result)
+
+
+# ============================================================================
 # System Endpoints
 # ============================================================================
 
@@ -393,34 +523,94 @@ def reset_blockchain():
 # Error Handlers
 # ============================================================================
 
+
+def _error_body(
+    message: str,
+    *,
+    error_type: str = "Error",
+    code: str = "ERROR",
+    details: dict | None = None,
+    request_id: str | None = None,
+) -> dict:
+    body = {
+        "error": {
+            "type": error_type,
+            "code": code,
+            "message": message,
+            "timestamp": get_current_timestamp(),
+        }
+    }
+    if details:
+        body["error"]["details"] = details
+    if request_id:
+        body["error"]["request_id"] = request_id
+    return body
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    """Handle structured application errors."""
+    request_id = request.headers.get("X-Request-ID")
+    api_logger.warning("AppError [%s]: %s", exc.code, exc.message)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(
+            exc.message,
+            error_type=exc.__class__.__name__,
+            code=exc.code,
+            details=exc.details or None,
+            request_id=request_id,
+        ),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Normalize FastAPI HTTPException responses."""
+    request_id = request.headers.get("X-Request-ID")
+    detail = exc.detail
+    if isinstance(detail, dict):
+        message = detail.get("message", str(detail))
+        code = detail.get("code", "HTTP_ERROR")
+    else:
+        message = str(detail)
+        code = "HTTP_ERROR"
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_error_body(message, code=code, request_id=request_id),
+    )
+
+
 @app.exception_handler(ValueError)
-async def value_error_handler(request, exc):
+async def value_error_handler(request: Request, exc: ValueError):
     """Handle ValueError exceptions."""
+    request_id = request.headers.get("X-Request-ID")
     return JSONResponse(
         status_code=400,
-        content={
-            "error": {
-                "type": "ValidationError",
-                "message": str(exc),
-                "timestamp": get_current_timestamp(),
-            }
-        },
+        content=_error_body(
+            str(exc),
+            error_type="ValidationError",
+            code="VALIDATION_ERROR",
+            request_id=request_id,
+        ),
     )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request: Request, exc: Exception):
     """Handle general exceptions."""
-    logger.error(f"Unhandled exception: {exc}")
+    request_id = request.headers.get("X-Request-ID")
+    api_logger.exception("Unhandled exception: %s", exc)
+    message = str(exc) if SETTINGS.debug else "An unexpected error occurred"
     return JSONResponse(
         status_code=500,
-        content={
-            "error": {
-                "type": "InternalError",
-                "message": "An unexpected error occurred",
-                "timestamp": get_current_timestamp(),
-            }
-        },
+        content=_error_body(
+            message,
+            error_type="InternalError",
+            code="INTERNAL_ERROR",
+            request_id=request_id,
+        ),
     )
 
 
@@ -433,6 +623,7 @@ def set_difficulty(request: SetDifficultyRequest):
     """Update mining difficulty."""
     try:
         blockchain_service.blockchain.difficulty = int(request.difficulty)
+        blockchain_service.persist()
         return {"success": True, "difficulty": blockchain_service.blockchain.difficulty}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -443,8 +634,8 @@ if __name__ == "__main__":
 
     uvicorn.run(
         app,
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info",
+        host=SETTINGS.api_host,
+        port=SETTINGS.api_port,
+        reload=SETTINGS.debug,
+        log_level=SETTINGS.log_level.lower(),
     )

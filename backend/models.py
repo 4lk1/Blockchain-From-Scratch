@@ -60,6 +60,75 @@ class Attack51Request(BaseModel):
     pass  # No parameters needed - uses system defaults
 
 
+class RegisterPeerRequest(BaseModel):
+    """Schema for registering a peer node URL."""
+
+    peer_url: str = Field(..., min_length=8, description="Base URL of a peer node")
+
+
+class SyncResponse(BaseModel):
+    """Response model for peer synchronization."""
+
+    success: bool
+    message: str
+    local_chain_length: int
+    source_peer: Optional[str] = None
+
+
+class MinerStatResponse(BaseModel):
+    """Miner leaderboard entry."""
+
+    address: str
+    name: str
+    label: str
+    blocks_mined: int
+    total_rewards: float
+
+
+class AnalyticsSummaryResponse(BaseModel):
+    """High-level analytics KPIs."""
+
+    total_blocks: int
+    chain_height: int
+    average_block_time: float
+    transaction_throughput: float
+    pending_transactions: int
+    wallet_count: int
+    peer_count: int
+    reachable_peers: int
+    network_health: str
+    chain_valid: bool
+    difficulty: int
+    estimated_hash_rate: float
+    total_fees_rewards: float
+    storage_bytes: int
+    storage_kb: float
+    node_uptime_seconds: float
+    sync_progress_percent: float
+    longest_peer_chain: int
+    mining_reward: float
+
+
+class AnalyticsTimeseriesResponse(BaseModel):
+    """Chart-ready time series."""
+
+    block_labels: List[str]
+    block_times: List[float]
+    tx_counts: List[int]
+    cumulative_txs: List[int]
+    hash_rates: List[float]
+    rewards_per_block: List[float]
+
+
+class AnalyticsResponse(BaseModel):
+    """Full analytics payload for dashboard charts."""
+
+    summary: AnalyticsSummaryResponse
+    timeseries: AnalyticsTimeseriesResponse
+    miners: List[MinerStatResponse]
+    peers: List[str]
+
+
 # ============================================================================
 # Response Models
 # ============================================================================
@@ -281,6 +350,8 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     timestamp: float
+    uptime_seconds: float = 0.0
+    server_started_at: float = 0.0
 
     class Config:
         json_schema_extra = {

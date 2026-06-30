@@ -1,490 +1,419 @@
-# 🔗 Blockchain Simulator - Professional Educational Platform
+# Chain Explorer — Educational Blockchain Simulator
 
-> A production-quality educational blockchain simulator with modern web interface, RESTful API, and interactive demonstrations of blockchain concepts.
+> A production-quality educational blockchain simulator with a modern explorer dashboard, RESTful API, interactive visualizations, and hands-on attack demos.
 
 ![Version](https://img.shields.io/badge/version-2.0.0-cyan) ![Python](https://img.shields.io/badge/Python-3.12+-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green) ![License](https://img.shields.io/badge/license-Educational-blue)
 
 ---
 
-## 📋 Quick Navigation
+## Quick navigation
 
-- **Getting Started**: [Installation & Quick Start](#-quick-start)
-- **Learn**: [Educational Concepts](#-security-concepts)
-- **Build**: [API Documentation](#-api-documentation)
-- **Explore**: [Project Structure](#-project-structure)
-- **Support**: [Troubleshooting](#-troubleshooting)
-
----
-
-## 🎯 Overview
-
-The Blockchain Simulator is a comprehensive educational platform that demonstrates blockchain technology from first principles. Perfect for university education, interviews, and self-learning.
-
-**What You'll Build:**
-- Create digital wallets with ECDSA signatures
-- Mine blocks using Proof-of-Work consensus
-- Validate blockchain integrity with cryptographic hashing
-- Simulate attacks: double-spending and 51% takeovers
-- See tampering detection in real-time
-
-**Production Features:**
-- Clean layered architecture (services, models, utils)
-- Type-safe Python with full Pydantic validation
-- Premium UI: Aurora gradients + liquid glass effects
-- RESTful API with auto-generated Swagger documentation
-- Real cryptography: ECDSA + SHA-256
+| | |
+|---|---|
+| **Run locally** | [How to run](#how-to-run) |
+| **Use the dashboard** | [Dashboard walkthrough](#dashboard-walkthrough) |
+| **Developers** | [Developer Guide](DEVELOPER.md) · [Architecture](backend/ARCHITECTURE.md) |
+| **Contributors** | [Implementation Rules](IMPLEMENTATION_RULES.md) · [Changelog](CHANGELOG.md) · [Agent Guide](AGENTS.md) |
+| **API** | [API reference](#api-reference) |
+| **Help** | [Troubleshooting](#troubleshooting) |
 
 ---
 
-## ✨ Features at a Glance
+## Overview
 
-### 🔐 Blockchain Core
-✅ SHA-256 hashing
-✅ ECDSA signatures
-✅ Proof-of-Work mining
-✅ Chain validation
-✅ Transaction signing
+**Chain Explorer** demonstrates blockchain technology from first principles — hashing, ECDSA signatures, Proof-of-Work mining, chain validation, and consensus attacks — through a browser-based dashboard you can run locally.
 
-### 🎨 Interactive UI
-✅ Modern liquid glass design
-✅ Real-time synchronization
-✅ Responsive layout
-✅ Dark mode with aurora colors
-✅ Modal forms for operations
+**What you can do:**
 
-### 📊 Demonstrations
-✅ Tamper detection
-✅ 51% attack simulation
-✅ Mining visualization
-✅ Transaction pool
-✅ Chain validation
+- Create wallets and sign transactions with ECDSA
+- Mine blocks with adjustable PoW difficulty
+- Explore blocks, mempool, and wallet balances in real time
+- Run tamper and 51% attack simulations
+- Sync chains between multiple local nodes over HTTP
+- Learn concepts via interactive **Visualize** and **Learn** views
+- Inspect network metrics in **Analytics**
+
+**Stack:** Python 3.12 + FastAPI backend · vanilla HTML/CSS/JS frontend · JSON persistence · real SHA-256 + ECDSA cryptography.
+
+> **Educational use only.** This is not a production cryptocurrency. Do not use it with real value.
 
 ---
 
-## 🚀 Quick Start
+## Features
+
+### Blockchain core
+- SHA-256 block hashing with linked chain structure
+- ECDSA transaction signing and verification
+- Proof-of-Work mining with configurable difficulty
+- Full chain validation (hashes, signatures, balance replay)
+- Mempool with deduplication and capacity limits
+- HTTP peer sync (longest valid chain rule)
+
+### Dashboard
+- Sidebar explorer UI with light / dark / system theme
+- Views: Overview, Blocks, Transactions, Wallets, Mining, Analytics, Visualize, Learn, Lab
+- Live polling, connection status, and chain integrity indicator
+- Accessibility: keyboard navigation, ARIA landmarks, high-contrast mode
+
+### Developer experience
+- Auto-generated OpenAPI docs at `/docs`
+- Structured logging, env-based config (`CHAIN_*` variables)
+- Block summary API for lightweight list views
+- Lazy-loaded modules (analytics, visualizations, education)
+
+---
+
+## How to run
+
+You need **two processes**: the FastAPI backend (port **8000**) and a static file server for the frontend (port **8001**). The frontend talks to the API at `http://localhost:8000`.
 
 ### Prerequisites
-- Python 3.12+
-- Terminal/Command Prompt
-- Modern web browser
 
-### 1️⃣ Install & Setup
+| Requirement | Notes |
+|-------------|-------|
+| **Python 3.12+** | Check with `python3 --version` |
+| **pip** | For installing dependencies |
+| **Modern browser** | Chrome, Firefox, Safari, or Edge |
+
+No Node.js build step is required — the frontend is plain HTML/CSS/JS.
+
+### 1. Clone and install
 
 ```bash
-# Clone/Navigate to project
-cd blockchain_project
+git clone <your-repo-url> Blockchain-From-Scratch
+cd Blockchain-From-Scratch
 
-# Create virtual environment
-python3.12 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Start Services
+Optional — copy environment defaults and customize:
 
-**Terminal 1** - Backend API:
 ```bash
-cd backend
-python -m uvicorn api:app --reload
+cp .env.example .env
 ```
 
-**Terminal 2** - Frontend:
+See [Configuration](#configuration) for available `CHAIN_*` variables.
+
+### 2. Start the app (recommended)
+
+From the **project root**, with your virtual environment active:
+
+```bash
+chmod +x scripts/dev.sh    # first time only
+./scripts/dev.sh
+```
+
+This starts both servers and prints:
+
+```
+API:      http://127.0.0.1:8000  (docs: /docs)
+Frontend: http://127.0.0.1:8001
+```
+
+Press **Ctrl+C** to stop both.
+
+### 2. Start manually (two terminals)
+
+**Terminal 1 — API** (run from project root):
+
+```bash
+source venv/bin/activate
+python -m uvicorn backend.api:app --reload --host 127.0.0.1 --port 8000
+```
+
+**Terminal 2 — Frontend**:
+
 ```bash
 cd frontend
 python -m http.server 8001
 ```
 
-### 3️⃣ Open in Browser
+> **Important:** Run uvicorn as `backend.api:app` from the repo root, not `cd backend && uvicorn api:app`.
 
-Visit: **http://localhost:8001**
+### 3. Open the dashboard
 
-Done! 🎉 Start with "Create" button to make your first wallet.
+| URL | Purpose |
+|-----|---------|
+| **http://localhost:8001** | Chain Explorer dashboard |
+| **http://localhost:8000/docs** | Swagger API documentation |
+| **http://localhost:8000/health** | Health check |
+
+On first load you should see the **Overview** view with live stats. If the API is unreachable, a connection banner appears at the top — confirm the backend is running and that port 8000 is free.
+
+### 4. Verify the backend
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response (shape may vary slightly):
+
+```json
+{"status":"healthy","version":"2.0.0"}
+```
+
+### 5. Quick smoke test
+
+1. Open **Wallets** → create a wallet named `Alice`
+2. Open **Transactions** → send coins from `Alice` to another wallet
+3. Open **Mining** → mine a block
+4. Open **Overview** → confirm block count and balances updated
+
+For attack demos, use the **Lab** view (tamper + 51% attack).
+
+### Custom ports
+
+Set ports via environment variables (or in `.env`):
+
+```bash
+CHAIN_API_PORT=9000 CHAIN_FE_PORT=9001 ./scripts/dev.sh
+```
+
+If you change the API port, update the frontend meta tag in `frontend/index.html`:
+
+```html
+<meta name="chain-api-url" content="http://localhost:9000">
+```
+
+Or override at runtime: `localStorage.setItem('chain_api_url', 'http://localhost:9000')`.
+
+### Debug mode
+
+- Backend: `CHAIN_DEBUG=true` in `.env` or environment
+- Frontend: append `?debug=1` to the dashboard URL
+
+See [DEVELOPER.md](DEVELOPER.md) for logging, error handling, and DevTools panel details.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-Frontend (http://localhost:8001)
-    ↓ (Fetch API)
-Backend API (http://localhost:8000)
-    ├─ FastAPI Server
-    ├─ Models (Pydantic validation)
-    ├─ Services (Business logic)
-    ├─ Utils (Helpers)
-    └─ Blockchain Core
-        ├─ wallet.py (ECDSA)
-        ├─ transaction.py (Signing)
-        ├─ block.py (Hashing)
-        ├─ blockchain.py (Validation)
-        ├─ miner.py (Proof-of-Work)
-        └─ attack.py (Simulations)
+Browser (http://localhost:8001)
+    │  Fetch API + hash routing (#overview, #learn/topic, …)
+    ▼
+FastAPI (http://localhost:8000)
+    ├── api.py              # Thin HTTP routes
+    ├── services/           # Business logic
+    ├── models.py           # Pydantic request/response schemas
+    ├── blockchain.py       # Chain, balances, validation
+    ├── mempool.py          # Pending transaction pool
+    ├── persistence/        # JSON + encrypted wallet storage
+    └── network/            # HTTP peer sync
 ```
 
-**Design**: Clean layered architecture with service-oriented pattern
+Design notes and intentional simplifications (account model, no P2P, float amounts) are documented in [`backend/ARCHITECTURE.md`](backend/ARCHITECTURE.md).
 
 ---
 
-## 📚 API Reference
+## Dashboard walkthrough
+
+| View | What to do |
+|------|------------|
+| **Overview** | Network stats, chain preview, difficulty control, quick actions |
+| **Blocks** | Browse all blocks; virtualized table for long chains |
+| **Transactions** | Create transfers; inspect mempool |
+| **Wallets** | Create wallets; view addresses and balances |
+| **Mining** | Select miner wallet and mine pending transactions |
+| **Analytics** | Charts for blocks, mining, sync metrics (Chart.js, lazy-loaded) |
+| **Visualize** | 13 interactive topics (hashing, PoW, forks, mempool, …) |
+| **Learn** | 17 concept guides with diagrams and demos (`#learn/topic` deep links) |
+| **Lab** | Tamper detection demo and 51% attack simulation |
+
+**Suggested learning path:** Wallets → Transactions → Mining → Validate (Overview) → Lab → Learn / Visualize.
+
+---
+
+## API reference
 
 ### Documentation
-- **Interactive Docs**: http://localhost:8000/docs (Swagger UI)
-- **Alternative Docs**: http://localhost:8000/redoc (ReDoc)
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
 
-### Essential Endpoints
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+- **OpenAPI JSON:** http://localhost:8000/openapi.json
+
+### Essential endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/wallets` | GET | List all wallets |
-| `/wallet/create` | POST | Create new wallet |
-| `/transactions` | GET | View pending transactions |
-| `/transaction/create` | POST | Create transaction |
-| `/mine` | POST | Mine new block |
-| `/blocks` | GET | View all blocks |
-| `/validate` | GET | Validate blockchain |
+| `/health` | GET | Health check |
+| `/config` | GET | Public runtime configuration |
+| `/wallets` | GET | List wallets |
+| `/wallet/create` | POST | Create wallet |
+| `/transactions` | GET | Pending mempool |
+| `/transaction/create` | POST | Create signed transaction |
+| `/mine` | POST | Mine block |
+| `/blocks` | GET | All blocks (`?summary=true&limit=&offset=` for lightweight list) |
+| `/blocks/{index}` | GET | Single block |
+| `/stats` | GET | Chain statistics |
+| `/analytics` | GET | Analytics aggregates |
+| `/validate` | GET | Validate full chain |
 | `/tamper` | POST | Tamper demo |
 | `/attack/51percent` | POST | 51% attack simulation |
-| `/reset` | POST | Reset blockchain |
+| `/network/sync` | POST | Sync with peer |
+| `/peers` | GET | Registered peers |
+| `/reset` | POST | Reset chain |
+| `/settings/difficulty` | POST | Change mining difficulty |
 
-### Example: Create Transaction
+### Example: create a transaction
 
 ```bash
 curl -X POST http://localhost:8000/transaction/create \
   -H "Content-Type: application/json" \
   -d '{
-    "sender_address": "0xalice",
-    "receiver_address": "0xbob",
+    "sender_address": "<alice-address>",
+    "receiver_address": "<bob-address>",
     "amount": 50.0
   }'
 ```
 
 ---
 
-## 📖 How to Use (Walkthrough)
+## Configuration
 
-### Step 1: Create Wallets
-1. Type "Alice" in wallet name field
-2. Click "Create"
-3. Repeat for "Bob" and "Charlie"
-4. ✓ Wallets appear in left sidebar with balances
+Copy [`.env.example`](.env.example) to `.env` in the project root. Common variables:
 
-### Step 2: Create Transactions
-1. Click "Transaction" button
-2. Select "Alice" as sender
-3. Select "Bob" as receiver
-4. Enter amount: 50
-5. Click "Create"
-6. ✓ Transaction appears in pool
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CHAIN_API_PORT` | `8000` | API listen port |
+| `CHAIN_FE_PORT` | `8001` | Used by `scripts/dev.sh` for frontend |
+| `CHAIN_DEBUG` | `false` | Verbose errors + debug endpoints |
+| `CHAIN_LOG_LEVEL` | `INFO` | Log verbosity |
+| `CHAIN_INITIAL_DIFFICULTY` | `3` | PoW leading zeros |
+| `CHAIN_MINING_REWARD` | `10.0` | Block reward amount |
+| `CHAIN_DATA_DIR` | `data` | Persistence directory |
+| `CHAIN_PERSISTENCE_ENABLED` | `true` | Save chain/wallets to disk |
 
-### Step 3: Mine Block
-1. Click "Mine" button
-2. Select "Charlie" as miner
-3. Click "Mine Block"
-4. ✓ Block created, Charlie earns 10 coin reward
-5. ✓ See nonce value (Proof-of-Work difficulty)
-
-### Step 4: Validate Blockchain
-1. Click "Validate"
-2. ✓ See "Valid" indicator if chain is intact
-3. Try again after tampering to see "Invalid"
-
-### Step 5: Tamper Demonstration
-1. Click "Tamper" button
-2. Block Index: 1
-3. Transaction Index: 0
-4. New Amount: 999
-5. Click "Execute Tamper"
-6. ✓ See before/after hashes differ
-7. ✓ Validate chain - now shows "Invalid"
-
-### Step 6: 51% Attack
-1. Click "51% Attack" button
-2. Click "Run Attack"
-3. ✓ See attacker with 60% power overtakes network
-4. ✓ Attacker's chain becomes accepted (longest chain rule)
-5. ✓ Double-spending succeeds!
+Data files: `data/chain.json`, `data/wallets.enc`, `data/peers.json`.
 
 ---
 
-## 🔐 Educational Concepts Explained
-
-### 1. **Cryptographic Hashing** (SHA-256)
-- Each block has unique hash based on its content
-- Any modification changes the hash
-- Hashes are linked: Block 2 contains hash of Block 1
-- Breaking one link breaks all subsequent links
-- **Example**: Change transaction amount in Block 1 → Hash changes → Block 2's reference becomes invalid
-
-### 2. **Digital Signatures** (ECDSA)
-- Sender proves ownership with private key
-- Everyone can verify with public key
-- Signature is impossible to forge
-- **Example**: Alice signs transaction with her private key → Bob verifies with Alice's public key
-
-### 3. **Proof-of-Work Mining**
-- Miners must find nonce value where hash starts with N zeros
-- Difficulty 3 = hash starts with `000`
-- Requires trying thousands/millions of values
-- First miner to find it gets reward
-- **Example**: Miner tries 50,000 nonces → finds one → gets 10 coins
-
-### 4. **Chain Validation**
-- Blockchain validates every block
-- Checks: correct hash, previous hash link, Proof-of-Work, signatures
-- If ANY block is invalid → entire chain is invalid
-- **Example**: Tamper with transaction → hash changes → next block's link breaks → validation fails
-
-### 5. **51% Attack - Double Spending**
-- If attacker controls >50% of mining power, they can:
-  1. Build secret chain with different transactions
-  2. Secretly mine blocks faster than honest network
-  3. When private chain is longer, broadcast it
-  4. Network switches to longest chain (consensus rule)
-  5. Previous transactions are reversed
-- **Example**: Attacker sends 100 coins to victim, victim sends goods, attacker mines longer chain without that transaction, now has coins AND goods!
-
-### 6. **Consensus Rules**
-- **Longest Chain Rule**: Network always accepts the longest valid chain
-- **Why it works**: With 51%+ power, attacker's chain grows fastest
-- **Why it fails with <50%**: Honest nodes' chain grows faster
-- **Solution**: Decentralized consensus (no single authority)
-
----
-
-## 📂 Project Structure
+## Project structure
 
 ```
-blockchain_project/
+Blockchain-From-Scratch/
 ├── backend/
-│   ├── api.py             # REST endpoints (350 lines)
-│   ├── models.py          # Pydantic schemas (250 lines)
-│   ├── services.py        # Business logic (400 lines)
-│   ├── utils.py           # Helpers (250 lines)
-│   ├── blockchain.py      # Chain logic
-│   ├── block.py           # Block structure
-│   ├── transaction.py     # Transaction signing
-│   ├── wallet.py          # Wallet management
-│   ├── miner.py           # Mining algorithm
-│   ├── attack.py          # 51% simulation
-│   └── requirements.txt   # Dependencies
-│
+│   ├── api.py                 # FastAPI routes
+│   ├── blockchain.py          # Core chain logic
+│   ├── models.py              # Pydantic schemas
+│   ├── services/              # Wallet, mining, sync, analytics, …
+│   ├── persistence/           # JSON + encrypted wallet store
+│   ├── network/               # HTTP peer sync
+│   ├── crypto/                # Hashing helpers
+│   └── ARCHITECTURE.md
 ├── frontend/
-│   ├── index.html         # Semantic HTML (250 lines)
-│   ├── style.css          # Aurora design (450 lines)
-│   ├── app.js             # Modular JS (350 lines)
-│   └── assets/            # Images/icons (future)
-│
-└── README.md              # This file
+│   ├── index.html             # Dashboard shell + views
+│   ├── style.css              # Design tokens + layout
+│   ├── css/                   # Feature styles (a11y, dx, perf, …)
+│   └── js/
+│       ├── api.js             # HTTP client + cache
+│       ├── ui.js              # Dashboard rendering
+│       ├── nav.js             # View routing
+│       ├── analytics.js       # Charts (lazy)
+│       ├── visualizations.js  # Interactive demos (lazy)
+│       └── education.js       # Learn mode (lazy)
+├── data/                      # Runtime persistence (gitignored)
+├── scripts/dev.sh             # Start API + frontend
+├── requirements.txt
+├── .env.example
+├── DEVELOPER.md
+├── IMPLEMENTATION_RULES.md
+└── CHANGELOG.md
 ```
 
-**Total Code**: ~3,000 lines of production-grade code
+---
+
+## Educational concepts
+
+| Topic | What you'll see |
+|-------|-----------------|
+| **Hashing** | Changing any block field breaks its hash and invalidates the chain |
+| **Signatures** | Only the wallet owner can authorize outgoing transfers |
+| **Proof-of-Work** | Miners search for a nonce until the hash meets the difficulty target |
+| **Validation** | Full replay checks signatures, PoW, and that balances never go negative |
+| **51% attack** | A longer secret chain can replace the honest chain (longest-chain rule) |
+
+Deep dives with diagrams and interactive demos are in the **Learn** and **Visualize** views.
 
 ---
 
-## 🛠️ Technologies
+## Troubleshooting
 
-| Layer | Tech | Purpose |
-|-------|------|---------|
-| **Backend** | Python 3.12 | Runtime |
-| | FastAPI 0.115 | REST framework |
-| | Pydantic 2.7 | Data validation |
-| | ECDSA 0.19 | Signatures |
-| | SHA-256 | Hashing |
-| **Frontend** | HTML5 | Semantic markup |
-| | CSS3 | Aurora aesthetics |
-| | Vanilla JS | Interactivity |
-| | Fetch API | HTTP communication |
+### Port already in use
 
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**"Port 8000 already in use"**
 ```bash
-python -m uvicorn api:app --port 8001 --reload
-# Update API_BASE in app.js to http://localhost:8001
+# Find what's using port 8000
+ss -tlnp | grep 8000
+
+# Or use a different port
+CHAIN_API_PORT=8080 ./scripts/dev.sh
 ```
 
-**Backend not responding**
+Remember to update `chain-api-url` in `frontend/index.html` if you change the API port.
+
+### Backend not responding
+
 ```bash
 curl http://localhost:8000/health
-# Should see: {"status":"healthy","version":"2.0.0",...}
 ```
 
-**Frontend not loading data**
-1. Check browser console (F12)
-2. Look for CORS errors
-3. Verify backend is running
-4. Clear browser cache (Ctrl+Shift+R)
+- Confirm uvicorn is running from the **project root** as `backend.api:app`
+- Check the terminal for Python import errors (`pip install -r requirements.txt`)
 
-**Transactions not signing**
-- Ensure sender wallet exists
-- Verify sender has sufficient balance
-- Check backend logs for error messages
+### Frontend shows "Cannot connect to the API"
 
-**Mining is stuck**
-- This is normal! Mining is intentionally hard (Proof-of-Work)
-- Try reducing difficulty in `backend/api.py`
-- Or wait for computation to complete
+1. Verify backend is up (`/health`)
+2. Open browser DevTools → Network tab for failed requests
+3. Confirm `<meta name="chain-api-url">` matches your API port
+4. Hard refresh: **Ctrl+Shift+R**
 
----
+### Mining feels slow
 
-## 📊 Performance
+That is intentional — Proof-of-Work is computationally expensive. Lower difficulty via the Overview control or `CHAIN_INITIAL_DIFFICULTY=2` in `.env`.
 
-| Metric | Value |
-|--------|-------|
-| Frontend polls | Every 2 seconds |
-| API response time | <100ms typical |
-| Mining time (difficulty=3) | 1-3 seconds |
-| Blockchain size | Limited by memory |
-| Block creation | ~2.5 seconds target |
+### Transactions rejected
+
+- Sender wallet must exist and have sufficient balance (including pending outgoing txs)
+- Amount must be positive; self-transfers are rejected
+- Check backend logs: `CHAIN_LOG_LEVEL=DEBUG`
 
 ---
 
-## 🔧 Development Notes
+## Development
 
-### Adding a New Feature
+Follow [`IMPLEMENTATION_RULES.md`](IMPLEMENTATION_RULES.md) before editing code. After significant changes, update [`CHANGELOG.md`](CHANGELOG.md).
 
-1. **API Endpoint**: Add to `backend/api.py`
-2. **Business Logic**: Add service method in `backend/services.py`
-3. **Data Model**: Add Pydantic model in `backend/models.py`
-4. **Frontend API Call**: Add method to `BlockchainAPI` class in `frontend/app.js`
-5. **UI Update**: Add rendering method in `UIRenderer` class
+**Adding a feature (typical flow):**
 
-### Type Safety
+1. Service method in `backend/services/`
+2. Pydantic model in `backend/models.py` if needed
+3. Route in `backend/api.py`
+4. API method in `frontend/js/api.js`
+5. UI in `frontend/js/ui.js` or a dedicated module
 
-All Python code has type hints:
-```python
-def create_wallet(self, name: str) -> Dict:
-    """Create wallet. Returns wallet data."""
-```
+Full DX, performance, and accessibility notes: [`DEVELOPER.md`](DEVELOPER.md).
 
 ---
 
-## 📝 Key Files Explained
+## Technologies
 
-### `backend/api.py`
-FastAPI server defining all HTTP endpoints. Each endpoint uses services to perform operations.
-
-### `backend/services.py`
-Business logic separated into services:
-- `BlockchainService`: Chain operations
-- `WalletService`: Wallet management
-- `TransactionService`: Transaction creation
-- `MiningService`: Mining operations
-- `AttackService`: Attack simulations
-
-### `backend/models.py`
-Pydantic models for request/response validation and automatic API documentation.
-
-### `frontend/app.js`
-Modular JavaScript with:
-- `BlockchainAPI` class: All API calls
-- `UIRenderer` class: All DOM updates
-- Event handlers: User interactions
-- `updateAppState()`: Real-time sync
-
-### `blockchain.py`
-Core blockchain logic:
-- Chain validation
-- Block creation
-- Pending transactions
-- Difficulty management
+| Layer | Technology |
+|-------|------------|
+| Backend | Python 3.12, FastAPI, Pydantic, uvicorn |
+| Crypto | ECDSA (NIST256p), SHA-256, Fernet wallet encryption |
+| Frontend | HTML5, CSS3, vanilla ES modules, Chart.js (lazy) |
+| Persistence | JSON files in `data/` |
+| Sync | HTTP REST between peer nodes |
 
 ---
 
-## 🎓 Learning Path
+## License
 
-**Beginner** (Start here)
-1. Create wallets
-2. Create transactions
-3. Mine blocks
-4. Watch balances update
-5. Understand Proof-of-Work
-
-**Intermediate**
-1. Read `blockchain.py` source code
-2. Validate blockchain after mining
-3. Study `wallet.py` for ECDSA
-4. Review transaction signing
-
-**Advanced**
-1. Tamper with blockchain
-2. Rebuild from tamper
-3. Run 51% attack simulation
-4. Modify difficulty setting
-5. Review entire codebase
+Educational use — for learning and demonstrations.
 
 ---
 
-## 🎯 Key Takeaways
-
-After using this simulator, you'll understand:
-
-1. **Blockchain immutability**: Hashes create unbreakable links
-2. **Mining hardness**: Proof-of-Work prevents spam/attacks
-3. **Signature security**: Only private key can authorize transactions
-4. **Consensus rules**: Longest chain is accepted (game theory)
-5. **Attack vector**: 51% power breaks decentralized consensus
-6. **Architecture patterns**: Services, models, clean separation
-
----
-
-## ❓ FAQ
-
-**Q: Can I use this for cryptocurrency?**
-A: No! This is for education only. Never trust it with real value.
-
-**Q: Can I change the difficulty?**
-A: Yes, in `backend/api.py` line 82: `difficulty=3` to `difficulty=4`
-
-**Q: How do I export blockchain data?**
-A: Fetch `/blocks` endpoint and save the JSON response.
-
-**Q: Is this production-ready?**
-A: It's designed for education, not production use.
-
-**Q: Can I run on mobile?**
-A: Yes! Frontend is fully responsive.
-
-**Q: Why is mining slow?**
-A: That's intentional! Proof-of-Work is computational by design.
-
----
-
-## 🚀 Next Steps
-
-1. ✅ Run the simulator
-2. ✅ Create wallets and transactions
-3. ✅ Mine blocks and observe nonce
-4. ✅ Experiment with tampering
-5. ✅ Run 51% attack
-6. ✅ Read source code
-7. ✅ Modify parameters
-8. ✅ Share with others!
-
----
-
-## 📞 Support Resources
-
-- **API Docs**: http://localhost:8000/docs
-- **Browser Console**: F12 → Console tab
-- **Backend Logs**: Terminal where you ran backend
-- **Frontend Network Tab**: F12 → Network tab
-
----
-
-## 📄 License
-
-Educational use. For learning and demonstrations.
-
----
-
-**Made with ❤️ for blockchain education**
-
-*v2.0.0 | Clean Architecture | Production Grade | Learning Focused*
+**Made for blockchain education** · v2.0.0 · [Changelog](CHANGELOG.md)

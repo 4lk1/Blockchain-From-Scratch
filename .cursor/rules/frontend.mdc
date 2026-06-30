@@ -1,0 +1,33 @@
+---
+description: Frontend conventions — vanilla JS Chain Explorer dashboard
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend Rules
+
+Stack: **Vanilla HTML/CSS/JS** — not React, Next.js, or Tailwind.
+
+## Structure
+- `index.html` — view shells only; prefer JS rendering for dynamic data
+- `style.css` — design tokens and shared components
+- `css/*.css` — feature styles (dx, perf, accessibility, visualizations, education)
+- `js/api.js` — BlockchainAPI + ApiCache (all HTTP here)
+- `js/ui.js` — UIRenderer dashboard
+- Reuse: Hooks, UIStates, Toast, ErrorUtils, Accessibility, ModuleLoader
+
+## Requirements
+- Accessible: focus-visible, ARIA, keyboard support (see accessibility.js)
+- Performant: ApiCache, Scheduler, skip DOM if fingerprint unchanged
+- Lazy-load heavy modules (analytics, visualizations, education) via ModuleLoader
+- JSDoc on new utility modules
+
+## Do not
+- Add a bundler or React without explicit request
+- Duplicate API calls outside BlockchainAPI
+- Use innerHTML without escaping user content (UIHelpers.escape)
+
+## UI changes
+- Match existing design tokens (--accent, --surface, etc.)
+- Update DEVELOPER.md for new modules or config
+- Update CHANGELOG.md for significant UX changes

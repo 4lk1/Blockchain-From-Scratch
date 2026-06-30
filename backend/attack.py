@@ -7,6 +7,7 @@ and returns structured results suitable for the API and frontend.
 """
 
 from .blockchain import Blockchain
+from .config import CONFIG
 from .transaction import Transaction
 from .wallet import Wallet
 
@@ -14,7 +15,7 @@ from .wallet import Wallet
 class Attack51Percent:
     """Simulates a 51% attack scenario and returns a result summary."""
 
-    def __init__(self, difficulty: int = 3):
+    def __init__(self, difficulty: int = CONFIG.initial_difficulty):
         self.difficulty = difficulty
         # Public and private chains used in the simulation
         self.public_chain = Blockchain(difficulty=difficulty, mining_reward=10)

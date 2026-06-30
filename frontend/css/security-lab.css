@@ -1,0 +1,412 @@
+/* Security Lab — interactive threat learning environment */
+
+.lab-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.lab-topics {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    position: sticky;
+    top: calc(var(--topbar-height) + var(--space-4));
+}
+
+.lab-topic-group__label {
+    margin: 0 0 var(--space-1);
+    padding: 0 var(--space-2);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.lab-topic {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    width: 100%;
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.lab-topic:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.lab-topic--active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.lab-topic__severity {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    margin-top: 0.45em;
+    border-radius: 50%;
+}
+
+.lab-severity--critical { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+.lab-severity--high { background: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); }
+.lab-severity--medium { background: var(--warning); box-shadow: 0 0 0 3px var(--warning-soft); }
+.lab-severity--low { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.lab-stage {
+    min-height: 480px;
+}
+
+.lab-panel {
+    animation: labFade 320ms ease both;
+}
+
+@keyframes labFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lab-panel,
+    .lab-step,
+    .lab-fork-block,
+    .lab-node {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+html[data-reduce-motion='true'] .lab-panel {
+    animation: none !important;
+}
+
+/* Header meta */
+.lab-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+}
+
+.lab-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full, 999px);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+}
+
+.lab-badge--critical { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.lab-badge--high { color: #ea580c; border-color: rgba(249, 115, 22, 0.35); background: rgba(249, 115, 22, 0.12); }
+.lab-badge--medium { color: var(--warning); border-color: var(--warning-soft); background: var(--warning-soft); }
+.lab-badge--low { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+
+.lab-badge--category {
+    color: var(--text-secondary);
+    text-transform: none;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+/* Info grid */
+.lab-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.lab-info-card {
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-subtle);
+}
+
+.lab-info-card__title {
+    margin: 0 0 var(--space-2);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.lab-info-card__body {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
+.lab-info-card__body ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.lab-info-card__body li + li {
+    margin-top: var(--space-1);
+}
+
+/* Simulation area */
+.lab-sim {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+}
+
+.lab-sim__title {
+    margin: 0 0 var(--space-1);
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.lab-sim__desc {
+    margin: 0 0 var(--space-4);
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    max-width: 65ch;
+}
+
+.lab-sim-stage {
+    min-height: 140px;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border);
+    margin-bottom: var(--space-4);
+}
+
+.lab-sim-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+/* Step timeline */
+.lab-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.lab-step {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    transition: border-color 300ms ease, background 300ms ease, color 300ms ease;
+}
+
+.lab-step--active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+}
+
+.lab-step--done {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.lab-step__num {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.lab-step--active .lab-step__num {
+    background: var(--accent);
+    color: #fff;
+}
+
+.lab-step--done .lab-step__num {
+    background: var(--success);
+    color: #fff;
+}
+
+/* Fork / chain visuals */
+.lab-fork-viz {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.lab-fork-lane {
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+}
+
+.lab-fork-lane--danger {
+    border-color: var(--danger-soft);
+    background: var(--danger-soft);
+}
+
+.lab-fork-lane--winner {
+    border-color: var(--success);
+    box-shadow: 0 0 0 2px var(--success-soft);
+}
+
+.lab-fork-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+}
+
+.lab-fork-blocks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    min-height: 28px;
+}
+
+.lab-fork-block {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--accent);
+    opacity: 0.75;
+    animation: labBlockPop 280ms ease both;
+}
+
+.lab-fork-lane--danger .lab-fork-block {
+    background: var(--danger);
+}
+
+@keyframes labBlockPop {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 0.75; transform: none; }
+}
+
+/* Network topology demo */
+.lab-network {
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lab-network-hub {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-align: center;
+    z-index: 2;
+}
+
+.lab-network-hub--victim {
+    border-color: var(--warning);
+    background: var(--warning-soft);
+}
+
+.lab-network-orbit {
+    position: absolute;
+    inset: 0;
+}
+
+.lab-node {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 2px;
+}
+
+.lab-node--honest { border-color: var(--success); }
+.lab-node--sybil { border-color: var(--danger); background: var(--danger-soft); }
+.lab-node--eclipse { border-color: var(--danger); background: var(--danger-soft); }
+
+.lab-node--active {
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    transform: scale(1.08);
+}
+
+/* Best practices */
+.lab-practices {
+    margin-top: var(--space-5);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--success-soft);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.lab-practices__title {
+    margin: 0 0 var(--space-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--success);
+}
+
+.lab-practices ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.lab-footer-actions {
+    margin-top: var(--space-6);
+}
+
+@media (max-width: 900px) {
+    .lab-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .lab-topics {
+        position: static;
+    }
+}

@@ -3,270 +3,226 @@ Blockchain Module
 Manages the blockchain, including chain validation, transaction management, and mining rewards.
 """
 
+from typing import Callable, Dict, List, Optional, Tuple
+
 from .block import Block
+from .config import CONFIG
+from .mempool import Mempool
 from .transaction import Transaction
+from .validation import _apply_transaction_to_balances, validate_block_structure
+from .utils import logger
 
 
 class Blockchain:
-    """
-    Represents the entire blockchain.
+    """In-memory blockchain with PoW consensus and account-based balances."""
 
-    The blockchain is a chain of blocks, each containing transactions.
-    It enforces cryptographic validation to ensure integrity and prevent tampering.
-
-    Attributes:
-        chain (list): List of Block objects forming the blockchain
-        pending_transactions (list): Transactions waiting to be mined
-        difficulty (int): Number of leading zeros required for valid Proof-of-Work
-        mining_reward (float): Amount awarded to miners for successfully mining a block
-    """
-
-    def __init__(self, difficulty=4, mining_reward=10):
-        """
-        Initialize a new blockchain.
-
-        Args:
-            difficulty (int): Number of leading zeros for Proof-of-Work (default: 4)
-            mining_reward (float): Reward for mining a block (default: 10)
-        """
-        self.chain = []
-        self.pending_transactions = []
+    def __init__(
+        self,
+        difficulty: int = CONFIG.initial_difficulty,
+        mining_reward: float = CONFIG.mining_reward,
+        create_genesis: bool = True,
+    ):
+        self.chain: List[Block] = []
+        self.mempool = Mempool()
         self.difficulty = difficulty
         self.mining_reward = mining_reward
+        self._balance_cache: Dict[str, float] = {}
+        self._balances_dirty = True
+        self._on_change: Optional[Callable[[], None]] = None
 
-        # Create the genesis block (first block)
-        self.create_genesis_block()
+        if create_genesis:
+            self.create_genesis_block()
 
-    def create_genesis_block(self):
-        """
-        Create and add the genesis block (the first block in the chain).
+    @property
+    def pending_transactions(self) -> List[Transaction]:
+        """Backward-compatible view of the mempool."""
+        return self.mempool.list_transactions()
 
-        The genesis block has no previous hash and is manually created.
-        """
+    def set_change_listener(self, callback: Callable[[], None]) -> None:
+        self._on_change = callback
+
+    def _notify_change(self) -> None:
+        if self._on_change:
+            self._on_change()
+
+    def create_genesis_block(self) -> None:
         genesis_block = Block(0, [], "0")
         genesis_block.mine_block(self.difficulty)
         self.chain.append(genesis_block)
+        self._mark_balances_dirty()
+        self._notify_change()
 
-    def get_latest_block(self):
-        """
-        Get the most recent block in the chain.
+    @classmethod
+    def from_snapshot(
+        cls,
+        chain: List[Block],
+        mempool: Mempool,
+        difficulty: int,
+        mining_reward: float,
+    ) -> "Blockchain":
+        blockchain = cls(
+            difficulty=difficulty,
+            mining_reward=mining_reward,
+            create_genesis=False,
+        )
+        blockchain.chain = chain
+        blockchain.mempool = mempool
+        blockchain._mark_balances_dirty()
+        return blockchain
 
-        Returns:
-            Block: The last block in the chain
-        """
+    def get_latest_block(self) -> Block:
         return self.chain[-1]
 
-    def add_transaction(self, transaction):
-        """
-        Add a transaction to the pending transactions pool.
-
-        The transaction must be properly signed (except for SYSTEM transactions).
-        Unsigned or invalid transactions are rejected.
-
-        Args:
-            transaction (Transaction): Transaction to add
-
-        Returns:
-            bool: True if transaction was added, False otherwise
-        """
-        # Validate the transaction
-        if not transaction.is_valid():
-            print("Transaction rejected: Invalid signature or unsigned")
+    def add_transaction(self, transaction: Transaction) -> bool:
+        added, reason = self.mempool.add(transaction)
+        if not added:
+            logger.info("Transaction rejected: %s", reason)
             return False
 
-        self.pending_transactions.append(transaction)
-        print(
-            f"✓ Transaction added: {transaction.sender[:10]}..."
-            f"→{transaction.receiver[:10]}... ({transaction.amount})"
+        logger.info(
+            "Transaction added: %s...→%s... (%s)",
+            transaction.sender[:10],
+            transaction.receiver[:10],
+            transaction.amount,
         )
+        self._notify_change()
         return True
 
-    def mine_pending_transactions(self, miner_address):
-        """
-        Mine all pending transactions into a new block.
+    def mine_pending_transactions(self, miner_address: str) -> Block:
+        pending = self.mempool.take_all()
+        max_user_transactions = max(CONFIG.max_block_size - 1, 0)
+        if len(pending) > max_user_transactions:
+            overflow = pending[max_user_transactions:]
+            pending = pending[:max_user_transactions]
+            for tx in overflow:
+                self.mempool.add(tx)
 
-        This creates a new block containing all pending transactions,
-        mines it with Proof-of-Work, and adds a mining reward transaction.
+        reward_transaction = Transaction(
+            CONFIG.system_wallet_name,
+            miner_address,
+            self.mining_reward,
+        )
+        block_transactions = pending + [reward_transaction]
 
-        Args:
-            miner_address (str): Address of the miner to receive the reward
-        """
-        # Create mining reward transaction
-        reward_transaction = Transaction("SYSTEM", miner_address, self.mining_reward)
-        self.pending_transactions.append(reward_transaction)
-
-        # Create new block with pending transactions
         new_block = Block(
             len(self.chain),
-            self.pending_transactions,
+            block_transactions,
             self.get_latest_block().hash,
         )
-
-        # Mine the block
         new_block.mine_block(self.difficulty)
+        new_block.difficulty = self.difficulty
 
-        # Attach difficulty to block for external consumers
-        setattr(new_block, "difficulty", self.difficulty)
-
-        # Add block to chain
         self.chain.append(new_block)
-
-        # Clear pending transactions
-        self.pending_transactions = []
-
-        # Return the newly mined block for callers that expect it
+        self._mark_balances_dirty()
+        self._notify_change()
         return new_block
 
-    def get_balance(self, address):
-        """
-        Calculate the balance of an address.
+    def _mark_balances_dirty(self) -> None:
+        self._balances_dirty = True
 
-        Scans the entire blockchain and sums up all transactions.
-        Incoming transactions add to balance, outgoing transactions subtract.
-
-        Args:
-            address (str): Wallet address to check balance for
-
-        Returns:
-            float: The balance of the address
-        """
-        balance = 0
-
-        # Scan all blocks in the chain
+    def _rebuild_balance_cache(self) -> None:
+        balances: Dict[str, float] = {}
         for block in self.chain:
-            # Scan all transactions in the block
             for transaction in block.transactions:
-                # Add incoming transactions
-                if transaction.receiver == address:
-                    balance += transaction.amount
+                _apply_transaction_to_balances(transaction, balances)
+        self._balance_cache = balances
+        self._balances_dirty = False
 
-                # Subtract outgoing transactions
-                if transaction.sender == address:
-                    balance -= transaction.amount
+    def get_balance(self, address: str) -> float:
+        if self._balances_dirty:
+            self._rebuild_balance_cache()
+        return self._balance_cache.get(address, 0.0)
 
-        return balance
+    def is_chain_valid(self, quiet: bool = False) -> Tuple[bool, str]:
+        if not self.chain:
+            return False, "Chain is empty"
 
-    def is_chain_valid(self):
-        """
-        Validate the entire blockchain for integrity.
+        running_balances: Dict[str, float] = {}
 
-        Checks:
-        1. Each block's calculated hash matches stored hash
-        2. Previous hash links are correct
-        3. Each block's Proof-of-Work is valid (hash has correct leading zeros)
-        4. All transaction signatures are valid
-
-        Returns:
-            tuple: (is_valid, error_message) - True and empty string if valid
-        """
-        print("\nValidating blockchain...\n")
-
-        # Check each block in the chain
-        for i in range(len(self.chain)):
-            current_block = self.chain[i]
-
-            # Recalculate the block's hash
+        for index, current_block in enumerate(self.chain):
             stored_hash = current_block.hash
             recalculated_hash = current_block.calculate_hash()
-
-            if stored_hash != recalculated_hash:
-                error_msg = (
-                    f"Block #{i}: Hash mismatch\n"
-                    f"   Stored: {stored_hash}\n"
-                    f"   Calculated: {recalculated_hash}"
-                )
-                print(error_msg)
-                return False, error_msg
-
-            # Check previous hash link
-            if i > 0:
-                if current_block.previous_hash != self.chain[i - 1].hash:
-                    error_msg = (
-                        f"Block #{i}: Previous hash mismatch\n"
-                        f"   Expected: {self.chain[i - 1].hash}\n"
-                        f"   Got: {current_block.previous_hash}"
-                    )
-                    print(error_msg)
-                    return False, error_msg
-
-            # Check Proof-of-Work against the difficulty used for this block.
             block_difficulty = getattr(current_block, "difficulty", self.difficulty)
-            if not current_block.hash.startswith("0" * block_difficulty):
-                error_msg = (
-                    f"Block #{i}: Invalid Proof-of-Work "
-                    f"(insufficient leading zeros)"
-                )
-                print(error_msg)
+            expected_previous = "0" if index == 0 else self.chain[index - 1].hash
+
+            ok, error_msg = validate_block_structure(
+                block_index=current_block.index,
+                expected_index=index,
+                previous_hash=current_block.previous_hash,
+                expected_previous_hash=expected_previous,
+                block_hash=stored_hash,
+                recalculated_hash=recalculated_hash,
+                difficulty=block_difficulty,
+            )
+            if not ok:
+                if not quiet:
+                    print(error_msg)
                 return False, error_msg
 
-            # Validate all transaction signatures
-            for j, transaction in enumerate(current_block.transactions):
-                if not transaction.is_valid():
-                    error_msg = f"Block #{i}, Transaction #{j}: Invalid signature"
+            if len(current_block.transactions) > CONFIG.max_block_size:
+                error_msg = f"Block #{index}: exceeds max transaction count"
+                if not quiet:
                     print(error_msg)
+                return False, error_msg
+
+            for tx_index, transaction in enumerate(current_block.transactions):
+                if not transaction.is_valid():
+                    error_msg = f"Block #{index}, Transaction #{tx_index}: Invalid signature"
+                    if not quiet:
+                        print(error_msg)
                     return False, error_msg
 
-            print(f"✓ Block #{i}: Valid (hash={current_block.hash[:16]}...)")
+                ok, error_msg = _apply_transaction_to_balances(
+                    transaction,
+                    running_balances,
+                )
+                if not ok:
+                    error_msg = f"Block #{index}, Transaction #{tx_index}: {error_msg}"
+                    if not quiet:
+                        print(error_msg)
+                    return False, error_msg
 
-        print(f"\n✓ Blockchain is valid! All {len(self.chain)} blocks verified.\n")
+            if not quiet:
+                print(f"✓ Block #{index}: Valid (hash={current_block.hash[:16]}...)")
+
+        if not quiet:
+            print(f"\n✓ Blockchain is valid! All {len(self.chain)} blocks verified.\n")
         return True, ""
 
-    def get_chain_length(self):
-        """
-        Get the number of blocks in the chain.
+    def replace_chain_if_longer(self, candidate_chain: List[Block]) -> Tuple[bool, str]:
+        if len(candidate_chain) <= len(self.chain):
+            return False, "Candidate chain is not longer than the local chain"
 
-        Returns:
-            int: Number of blocks
-        """
+        previous_chain = self.chain
+        previous_mempool = self.mempool
+        previous_dirty = self._balances_dirty
+
+        self.chain = candidate_chain
+        self.mempool.clear()
+        self._mark_balances_dirty()
+
+        is_valid, error = self.is_chain_valid(quiet=True)
+        if not is_valid:
+            self.chain = previous_chain
+            self.mempool = previous_mempool
+            self._balances_dirty = previous_dirty
+            return False, error or "Candidate chain failed validation"
+
+        self._notify_change()
+        return True, f"Replaced local chain with {len(candidate_chain)} blocks"
+
+    def get_chain_length(self) -> int:
         return len(self.chain)
 
-    def get_pending_transaction_count(self):
-        """
-        Get the number of pending transactions.
+    def get_pending_transaction_count(self) -> int:
+        return len(self.mempool)
 
-        Returns:
-            int: Number of pending transactions
-        """
-        return len(self.pending_transactions)
+    def get_total_transaction_count(self) -> int:
+        return sum(len(block.transactions) for block in self.chain)
 
-    def get_total_transaction_count(self):
-        """
-        Get the total number of transactions in the entire chain.
-
-        Returns:
-            int: Total transaction count
-        """
-        count = 0
-        for block in self.chain:
-            count += len(block.transactions)
-        return count
-
-    def print_chain(self):
-        """Print a formatted representation of the entire blockchain."""
-        print("\n" + "="*80)
-        print("BLOCKCHAIN".center(80))
-        print("="*80 + "\n")
-
-        for block in self.chain:
-            print(f"Block #{block.index}")
-            print(f"  Hash: {block.hash}")
-            print(f"  Previous Hash: {block.previous_hash}")
-            print(f"  Nonce: {block.nonce}")
-            print(f"  Timestamp: {block.timestamp}")
-            print(f"  Transactions: {len(block.transactions)}")
-
-            for i, tx in enumerate(block.transactions):
-                print(
-                    f"    [{i}] {tx.sender[:10]}... → "
-                    f"{tx.receiver[:10]}... : {tx.amount}"
-                )
-
-            print()
-
-    def __repr__(self):
-        """String representation of blockchain."""
+    def __repr__(self) -> str:
         return (
             f"Blockchain(blocks={len(self.chain)}, "
-            f"pending_txs={len(self.pending_transactions)}, "
+            f"pending_txs={len(self.mempool)}, "
             f"difficulty={self.difficulty})"
         )

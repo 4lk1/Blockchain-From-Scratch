@@ -1,0 +1,30 @@
+---
+description: UI design system — Chain Explorer dashboard
+globs: frontend/**/*.{css,html}
+alwaysApply: false
+---
+
+# Design Rules
+
+Reference: `frontend/style.css` design tokens (Etherscan clarity + Vercel/Linear minimalism).
+
+## Use
+- CSS variables: `--accent`, `--surface`, `--border`, `--text-secondary`
+- Inter + JetBrains Mono fonts
+- Stat cards, data tables, sidebar navigation pattern
+- Toasts for feedback; UIStates for loading/empty/error
+- Theme: light/dark/system via ThemeManager
+- High contrast: Accessibility toggle + accessibility.css
+
+## Avoid
+- Random colors outside token system
+- Aurora/glass clutter (removed in Phase 4)
+- Heavy animation — respect prefers-reduced-motion
+- Inline styles except dynamic viz/education content
+
+## Accessibility (required)
+- Focus-visible rings, ARIA landmarks, table captions
+- 44px min touch targets on primary controls
+- See frontend/js/accessibility.js
+
+Every view should feel clear and professional — educational first, not decorative.

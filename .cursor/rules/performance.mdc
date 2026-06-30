@@ -1,0 +1,31 @@
+---
+description: Performance patterns — Chain Explorer frontend/backend
+globs: frontend/**/*,backend/**/*
+alwaysApply: false
+---
+
+# Performance Rules
+
+See DEVELOPER.md "Performance (Phase 9)" for details.
+
+## Frontend
+- ApiCache + in-flight dedup (frontend/js/cache.js)
+- Lazy load: analytics, visualizations, education via ModuleLoader
+- VirtualList for 40+ blocks; chain preview shows last 15 only
+- Scheduler.schedule for batched DOM; fingerprint diff before re-render
+- Pause polling when tab hidden (Scheduler.createPoller)
+- GET /blocks?summary=true for lightweight payloads
+
+## Backend
+- Balance cache rebuilt on mutation (blockchain.py)
+- Block summary serialization without tx bodies
+- Cache-Control on /stats
+- Quiet validation on stats endpoint
+
+## Avoid
+- Fetching full blocks when summaries suffice
+- Polling inactive views
+- Loading Chart.js on initial page load
+- Full table innerHTML rebuild when data unchanged
+
+Do not sacrifice correctness for speed (validation must remain complete).

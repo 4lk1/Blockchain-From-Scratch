@@ -4,6 +4,7 @@ Provides mining functionality with detailed metrics and statistics.
 """
 
 import time
+from typing import Any, Optional
 
 
 class Miner:
@@ -35,44 +36,37 @@ class Miner:
         self.total_rewards = 0
         self.mining_times = []
 
-    def mine_block(self, blockchain):
+    def mine_block(self, blockchain) -> Optional[Any]:
         """
         Mine a block on the given blockchain.
 
-        This method:
-        1. Records the start time
-        2. Mines pending transactions into a new block
-        3. Records mining statistics
-        4. Updates the miner's rewards
+        Reward-only blocks are allowed when the pending pool is empty.
 
         Args:
-            blockchain (Blockchain): The blockchain to mine on
+            blockchain: The blockchain to mine on
+
+        Returns:
+            The newly mined block, or None if mining failed
         """
-        if len(blockchain.pending_transactions) == 0:
-            print("No pending transactions to mine")
-            return
+        pending_count = len(blockchain.pending_transactions)
 
         print(f"\n{'=' * 60}")
         print(f"MINING BLOCK #{blockchain.get_chain_length()}".center(60))
         print(f"Miner: {self.address[:16]}...".center(60))
-        print(f"Pending Transactions: {len(blockchain.pending_transactions)}".center(60))
+        print(f"Pending Transactions: {pending_count}".center(60))
         print(f"{'=' * 60}")
 
-        # Record start time
         start_time = time.time()
-
-        # Mine the block
-        blockchain.mine_pending_transactions(self.address)
-
-        # Record end time and calculate mining time
+        block = blockchain.mine_pending_transactions(self.address)
         mining_time = time.time() - start_time
-        self.mining_times.append(mining_time)
 
-        # Update statistics
+        if block is None:
+            return None
+
+        self.mining_times.append(mining_time)
         self.blocks_mined += 1
         self.total_rewards += blockchain.mining_reward
 
-        # Print statistics
         print("\nMining Statistics:")
         print(f"   Total blocks mined: {self.blocks_mined}")
         print(f"   Total rewards: {self.total_rewards}")
@@ -80,6 +74,8 @@ class Miner:
             f"   Average mining time: "
             f"{sum(self.mining_times) / len(self.mining_times):.2f}s"
         )
+
+        return block
 
     def get_average_mining_time(self):
         """

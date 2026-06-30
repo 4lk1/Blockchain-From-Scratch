@@ -1,0 +1,32 @@
+---
+description: Backend conventions — FastAPI blockchain simulator
+globs: backend/**/*.py
+alwaysApply: false
+---
+
+# Backend Rules
+
+Stack: **Python 3.12+, FastAPI, Pydantic, pydantic-settings** — not Supabase/PostgreSQL.
+
+## Structure
+- `api.py` — thin route handlers only
+- `services/*.py` — orchestration
+- `blockchain.py`, `block.py`, `transaction.py` — domain
+- `models.py` — Pydantic request/response schemas
+- `exceptions.py` — AppError hierarchy
+- `settings.py` / `config.py` — CHAIN_* env configuration
+
+## Requirements
+- Type hints on all public functions
+- Validate inputs via Pydantic models or explicit checks
+- Log with `blockchain` logger; use structured errors (AppError)
+- Never expose stack traces when CHAIN_DEBUG=false
+- Persist via ChainStore/WalletStore — do not bypass services
+
+## API changes
+- Add OpenAPI summary/description
+- Document new env vars in .env.example
+- Update CHANGELOG.md with what/why/impact/risks
+
+## Testing when practical
+- pytest for validation, crypto, service methods in tests/

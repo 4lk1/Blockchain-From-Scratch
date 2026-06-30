@@ -8,44 +8,14 @@ This module contains helper functions for:
 - Conversion utilities
 """
 
-import logging
 import hashlib
 import time
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
+from .logging_config import configure_logging
 
-# ============================================================================
-# Logging Setup
-# ============================================================================
-
-
-def setup_logging(level: str = "INFO") -> logging.Logger:
-    """
-    Configure logging for the blockchain backend.
-
-    Args:
-        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-
-    Returns:
-        Configured logger instance
-    """
-    logger = logging.getLogger("blockchain")
-
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(level)
-        logger.propagate = False
-
-    return logger
-
-
-logger = setup_logging()
+logger = configure_logging()
 
 
 # ============================================================================
@@ -243,6 +213,7 @@ def serialize_transaction(tx: Any) -> Dict[str, Any]:
         "amount": tx.amount,
         "timestamp": tx.timestamp,
         "signature": tx.signature,
+        "transaction_id": getattr(tx, "transaction_id", None),
         "is_valid": tx.is_valid(),
     }
 
@@ -286,41 +257,26 @@ def serialize_block(block: Any) -> Dict[str, Any]:
     }
 
 
-# ============================================================================
-# Configuration Utilities
-# ============================================================================
+def serialize_block_summary(block: Any) -> Dict[str, Any]:
+    """Lightweight block payload without transaction bodies."""
+    miner_address = None
+    for tx in getattr(block, "transactions", []):
+        try:
+            if tx.sender == "SYSTEM":
+                miner_address = tx.receiver
+                break
+        except Exception:
+            continue
 
-class Config:
-    """Blockchain configuration."""
-
-    # Mining parameters
-    INITIAL_DIFFICULTY: int = 3
-    MINING_REWARD: float = 10.0
-    MAX_DIFFICULTY: int = 7
-    MIN_DIFFICULTY: int = 1
-
-    # Validation parameters
-    MAX_BLOCK_SIZE: int = 1000  # Maximum transactions per block
-    TRANSACTION_TIMEOUT: float = 3600  # 1 hour
-
-    # Network parameters
-    BLOCK_TARGET_TIME: float = 2.5  # Seconds (for difficulty adjustment)
-
-    # System addresses
-    SYSTEM_WALLET: str = "0x0"
-    SYSTEM_WALLET_NAME: str = "SYSTEM"
-
-
-def get_config() -> Dict[str, Any]:
-    """Get blockchain configuration as dictionary."""
     return {
-        "initial_difficulty": Config.INITIAL_DIFFICULTY,
-        "mining_reward": Config.MINING_REWARD,
-        "max_difficulty": Config.MAX_DIFFICULTY,
-        "min_difficulty": Config.MIN_DIFFICULTY,
-        "max_block_size": Config.MAX_BLOCK_SIZE,
-        "block_target_time": Config.BLOCK_TARGET_TIME,
-        "system_wallet": Config.SYSTEM_WALLET,
+        "index": block.index,
+        "timestamp": block.timestamp,
+        "hash": block.hash,
+        "previous_hash": block.previous_hash,
+        "nonce": block.nonce,
+        "transaction_count": len(getattr(block, "transactions", [])),
+        "miner_address": miner_address,
+        "difficulty": getattr(block, "difficulty", None),
     }
 
 

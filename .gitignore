@@ -1,0 +1,6 @@
+# Local blockchain state (auto-generated)
+data/
+*.tmp
+
+# Environment
+.env

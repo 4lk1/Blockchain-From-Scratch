@@ -1,0 +1,51 @@
+/* Performance-oriented styles */
+
+.view:not(.view--active) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+}
+
+.virtual-scroll {
+    overflow-y: auto;
+    max-height: 520px;
+    /* layout + paint only — strict/size containment collapses height when unset */
+    contain: content;
+}
+
+.virtual-scroll .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+}
+
+.virtual-pad td {
+    padding: 0 !important;
+    border: none !important;
+    line-height: 0;
+}
+
+.chain-ellipsis {
+    flex-shrink: 0;
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .viz-panel,
+    .edu-article,
+    .block-chip,
+    .viz-node,
+    .viz-mempool-tx {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+html[data-reduce-motion='true'] .viz-panel,
+html[data-reduce-motion='true'] .spinner {
+    animation: none !important;
+}
