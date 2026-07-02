@@ -34,19 +34,17 @@ else
 fi
 META_API_URL="$BACKEND_URL"
 
-if [[ -n "${NETLIFY:-}" && -z "$BACKEND_URL" ]]; then
-  echo "error: CHAIN_API_URL is required when building on Netlify." >&2
-  echo "  1. Deploy the FastAPI backend (see render.yaml in the repo root)." >&2
-  echo "  2. In Netlify → Site configuration → Environment variables, set:" >&2
-  echo "       CHAIN_API_URL=https://your-api.example.com" >&2
-  echo "  3. Trigger a new deploy." >&2
-  exit 1
-fi
-
 echo "Netlify build — Chain Explorer frontend"
 echo "  Output:   $OUT"
 echo "  Backend:  ${BACKEND_URL:-<not set>}"
 echo "  Proxy:    $PROXY"
+if [[ -n "${NETLIFY:-}" && -z "$BACKEND_URL" ]]; then
+  echo ""
+  echo "  warning: CHAIN_API_URL is not set — the dashboard cannot reach an API until you:" >&2
+  echo "    1. Deploy the FastAPI backend (see render.yaml)" >&2
+  echo "    2. Set CHAIN_API_URL in Netlify → Environment variables" >&2
+  echo "    3. Redeploy" >&2
+fi
 echo ""
 
 rm -rf "$OUT"
