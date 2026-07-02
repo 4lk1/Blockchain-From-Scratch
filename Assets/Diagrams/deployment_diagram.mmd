@@ -1,6 +1,0 @@
-graph TD
-  Browser[Browser :8001] --> API[FastAPI :8000]
-  API --> Data[(data/chain.json)]
-  API --> Wallets[(data/wallets.enc)]
-  API --> Peers[(data/peers.json)]
-  API -. HTTP sync .-> Peer[Peer node API]
