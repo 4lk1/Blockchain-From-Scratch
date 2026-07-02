@@ -1,6 +1,20 @@
 # Local blockchain state (auto-generated)
 data/
 *.tmp
+docs/
+.cursor/
+
+Assets/
+
+AGENTS.md
+CHNGELOG.md
+DEVELOPER.md
+IMPLEMENTATION_RULES.md
+
 
 # Environment
 .env
+.env.example
+documentation/
+Presentation.pdf
+Presentation.pptx

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+<defs>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#3b82f6"/><stop offset="52%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#22d3ee"/>
+  </linearGradient>
+  <filter id="soft"><feGaussianBlur stdDeviation="8"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .32 0"/><feBlend in="SourceGraphic"/></filter>
+</defs>
+<rect width="1600" height="900" rx="56" fill="#060a18"/>
+<circle cx="1370" cy="120" r="330" fill="#3b82f6" opacity=".14"/>
+<circle cx="200" cy="760" r="360" fill="#8b5cf6" opacity=".13"/>
+<text x="78" y="95" fill="#f5f8ff" font-family="Inter,Arial" font-size="48" font-weight="800">Real Request Lifecycle</text>
+<text x="80" y="140" fill="#94a3b8" font-family="Inter,Arial" font-size="24">POST /transaction/create from form submission to mempool admission.</text>
+<path d="M245.0 305.0 C435.0 305.0, 435.0 305.0, 625.0 305.0" stroke="url(#g)" stroke-width="5" fill="none" opacity=".72"/>
+<text x="435.0" y="295.0" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial" font-size="20">form data</text>
+<path d="M625.0 305.0 C815.0 305.0, 815.0 305.0, 1005.0 305.0" stroke="url(#g)" stroke-width="5" fill="none" opacity=".72"/>
+<text x="815.0" y="295.0" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial" font-size="20">POST JSON</text>
+<path d="M1005.0 305.0 C1195.0 305.0, 1195.0 305.0, 1385.0 305.0" stroke="url(#g)" stroke-width="5" fill="none" opacity=".72"/>
+<text x="1195.0" y="295.0" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial" font-size="20">route calls service</text>
+<path d="M1385.0 305.0 C1005.0 305.0, 1005.0 645.0, 625.0 645.0" stroke="url(#g)" stroke-width="5" fill="none" opacity=".72"/>
+<text x="1005.0" y="465.0" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial" font-size="20">sign payload hash</text>
+<path d="M1385.0 305.0 C1195.0 305.0, 1195.0 645.0, 1005.0 645.0" stroke="url(#g)" stroke-width="5" fill="none" opacity=".72"/>
+<text x="1195.0" y="465.0" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial" font-size="20">add(tx)</text>
+<rect x="90" y="245" width="310" height="120" rx="30" fill="#101831" stroke="#3b82f6" stroke-width="3" filter="url(#soft)"/>
+<circle cx="132" cy="293" r="15" fill="#3b82f6"/>
+<text x="172" y="289" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">EventManager</text>
+<text x="172" y="318" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">submitTransaction()</text>
+<rect x="470" y="245" width="310" height="120" rx="30" fill="#101831" stroke="#8b5cf6" stroke-width="3" filter="url(#soft)"/>
+<circle cx="512" cy="293" r="15" fill="#8b5cf6"/>
+<text x="552" y="289" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">BlockchainAPI</text>
+<text x="552" y="318" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">fetch + ApiCache invalidation</text>
+<rect x="850" y="245" width="310" height="120" rx="30" fill="#101831" stroke="#22d3ee" stroke-width="3" filter="url(#soft)"/>
+<circle cx="892" cy="293" r="15" fill="#22d3ee"/>
+<text x="932" y="289" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">FastAPI Route</text>
+<text x="932" y="318" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">Pydantic request model</text>
+<rect x="1230" y="245" width="310" height="120" rx="30" fill="#101831" stroke="#22c55e" stroke-width="3" filter="url(#soft)"/>
+<circle cx="1272" cy="293" r="15" fill="#22c55e"/>
+<text x="1312" y="289" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">TransactionService</text>
+<text x="1312" y="318" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">address + balance checks</text>
+<rect x="470" y="585" width="310" height="120" rx="30" fill="#101831" stroke="#f59e0b" stroke-width="3" filter="url(#soft)"/>
+<circle cx="512" cy="633" r="15" fill="#f59e0b"/>
+<text x="552" y="629" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">Wallet</text>
+<text x="552" y="658" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">ECDSA signing</text>
+<rect x="850" y="585" width="310" height="120" rx="30" fill="#101831" stroke="#ef4444" stroke-width="3" filter="url(#soft)"/>
+<circle cx="892" cy="633" r="15" fill="#ef4444"/>
+<text x="932" y="629" fill="#f5f8ff" font-family="Inter,Arial" font-size="26" font-weight="800">Mempool</text>
+<text x="932" y="658" fill="#94a3b8" font-family="Inter,Arial" font-size="19" font-weight="500">valid + unique tx id</text>
+</svg>

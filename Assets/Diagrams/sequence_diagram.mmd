@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant U as User
+  participant UI as Dashboard
+  participant API as FastAPI
+  participant S as TransactionService
+  participant C as Blockchain
+  U->>UI: Submit transfer
+  UI->>API: POST /transaction/create
+  API->>S: validate + sign
+  S->>C: add_transaction()
+  C-->>S: mempool accepted
+  API-->>UI: JSON response

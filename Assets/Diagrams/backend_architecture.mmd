@@ -1,0 +1,9 @@
+graph TD
+  API[FastAPI routes] --> Services[Services layer]
+  Services --> Chain[Blockchain]
+  Chain --> Block[Block PoW]
+  Chain --> Mempool[Mempool]
+  Chain --> Validation[validation.py]
+  Services --> Wallets[WalletService]
+  Wallets --> Store[WalletStore Fernet]
+  Services --> Sync[HTTP peer sync]

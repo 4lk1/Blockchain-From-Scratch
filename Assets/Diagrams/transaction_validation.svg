@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800">
+
+<defs>
+  <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0%" stop-color="#3a89ff"/>
+    <stop offset="50%" stop-color="#8b5cf6"/>
+    <stop offset="100%" stop-color="#22d3ee"/>
+  </linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1400" height="800" rx="48" fill="#070a16"/>
+<circle cx="1180" cy="110" r="230" fill="#3a89ff" opacity=".12" filter="url(#glow)"/>
+<circle cx="210" cy="690" r="260" fill="#8b5cf6" opacity=".12" filter="url(#glow)"/>
+<text x="70" y="92" fill="#f4f7fb" font-family="Inter, Arial" font-size="46" font-weight="700">Transaction Validation</text>
+<path d="M375 245 C397 245, 397 245, 420 245" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M705 245 C727 245, 727 245, 750 245" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M1035 245 C1057 245, 1057 245, 1080 245" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M1190 300 C945 300, 945 505, 700 505" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<text x="945" y="390" fill="#9cacbf" font-family="Inter, Arial" font-size="24" text-anchor="middle">block replay</text>
+<rect x="90" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#3a89ff" stroke-width="3" opacity=".96"/>
+<rect x="108" y="208" width="54" height="54" rx="18" fill="#3a89ff" opacity=".2"/>
+<circle cx="135" cy="235" r="12" fill="#3a89ff"/>
+<text x="182" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Shape
+addresses + amount</text>
+<rect x="420" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#8b5cf6" stroke-width="3" opacity=".96"/>
+<rect x="438" y="208" width="54" height="54" rx="18" fill="#8b5cf6" opacity=".2"/>
+<circle cx="465" cy="235" r="12" fill="#8b5cf6"/>
+<text x="512" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Ownership
+ECDSA signature</text>
+<rect x="750" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#22d3ee" stroke-width="3" opacity=".96"/>
+<rect x="768" y="208" width="54" height="54" rx="18" fill="#22d3ee" opacity=".2"/>
+<circle cx="795" cy="235" r="12" fill="#22d3ee"/>
+<text x="842" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Economics
+available balance</text>
+<rect x="1080" y="190" width="230" height="110" rx="28" fill="#131c36" stroke="#22c55e" stroke-width="3" opacity=".96"/>
+<rect x="1098" y="208" width="54" height="54" rx="18" fill="#22c55e" opacity=".2"/>
+<circle cx="1125" cy="235" r="12" fill="#22c55e"/>
+<text x="1172" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Mempool
+dedup ID</text>
+<rect x="425" y="505" width="550" height="110" rx="28" fill="#131c36" stroke="#f59e0b" stroke-width="3" opacity=".96"/>
+<rect x="443" y="523" width="54" height="54" rx="18" fill="#f59e0b" opacity=".2"/>
+<circle cx="470" cy="550" r="12" fill="#f59e0b"/>
+<text x="517" y="549" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Replay validation
+balances never go negative</text>
+</svg>

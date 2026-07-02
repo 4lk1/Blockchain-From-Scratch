@@ -17,6 +17,18 @@ Versioning tracks major project phases and releases.
 - **Blocks view refresh race:** block table DOM updates now re-check whether the Blocks view is active when the scheduled render runs, not only when the fetch started.
 
 ### Added
+- **Conference presentation package:** generated `Presentation.pptx`, `Presentation.pdf`, and `Assets/` with live Playwright screenshots, editable SVG/Figma/Canva-compatible diagram assets, animation storyboards, Mermaid sources, and a live API snapshot.
+  - **Why:** Provide a polished final-project/thesis presentation grounded in the running Chain Explorer implementation.
+  - **Impact:** Enables review-ready presentation delivery with reproducible screenshot and deck generation via `scripts/docs/build_master_presentation.py`.
+  - **Risks:** Visual artifacts should be regenerated after major UI, API, or architecture changes to avoid presentation drift.
+- **Publication technical documentation:** generated `docs/Technical_Documentation.pdf`, `.docx`, `.md`, `.tex`, bibliography, 27 Mermaid/DOT/SVG/PDF diagram source/render pairs, and 19 real screenshots captured from the running application.
+  - **Why:** Provide a source-grounded architecture and implementation document suitable for thesis, portfolio, architecture review, and handover use.
+  - **Impact:** Replaces placeholder-driven documentation with live screenshots, explicit "not detected" findings, endpoint cards, terminology, architecture, security, performance, deployment, and code-quality analysis.
+  - **Risks:** The document is generated from the current implementation and should be regenerated after API, UI, persistence, or security model changes.
+- **Reverse-engineered technical paper:** refactored `documentation/Technical_Paper.tex` and `Technical_Paper.pdf` into a polished 50-page software architecture report with refreshed bibliography, vector diagrams, figure assets, and professional screen placeholders.
+  - **Why:** Provide a concise architecture/design reference suitable for a university thesis, final-year project, SAD, or technical design report.
+  - **Impact:** Improves typography, chapter hierarchy, shaded callouts, endpoint cards, tables, full-width diagrams, reduced appendices, and explicit "not detected" findings.
+  - **Risks:** Documentation can drift if the polished generator is not refreshed after future architecture/API changes.
 - **Security Lab redesign:** lazy-loaded `security-lab.js` + `security-lab.css` with 11 threat topics (integrity, transactions, consensus, network), severity badges, threat-model cards, step-by-step simulations, and preserved live API demos for tamper detection and 51% attacks.
   - **Why:** Phase 3 goal — interactive security learning without rewriting backend attack logic.
   - **Impact:** Lab view uses topic sidebar + detail panels; deep links via `#lab/{topic-id}`; reset still available.

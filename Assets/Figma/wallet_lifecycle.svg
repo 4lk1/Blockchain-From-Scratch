@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800">
+
+<defs>
+  <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0%" stop-color="#3a89ff"/>
+    <stop offset="50%" stop-color="#8b5cf6"/>
+    <stop offset="100%" stop-color="#22d3ee"/>
+  </linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1400" height="800" rx="48" fill="#070a16"/>
+<circle cx="1180" cy="110" r="230" fill="#3a89ff" opacity=".12" filter="url(#glow)"/>
+<circle cx="210" cy="690" r="260" fill="#8b5cf6" opacity=".12" filter="url(#glow)"/>
+<text x="70" y="92" fill="#f4f7fb" font-family="Inter, Arial" font-size="46" font-weight="700">Wallet Lifecycle</text>
+<path d="M400 258 C480 258, 480 258, 560 258" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M840 258 C920 258, 920 258, 1000 258" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M1140 315 C1030 315, 1030 500, 920 500" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M480 315 C480 315, 480 500, 480 500" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<path d="M620 558 C700 558, 700 558, 780 558" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<rect x="120" y="200" width="280" height="115" rx="28" fill="#131c36" stroke="#3a89ff" stroke-width="3" opacity=".96"/>
+<rect x="138" y="218" width="54" height="54" rx="18" fill="#3a89ff" opacity=".2"/>
+<circle cx="165" cy="245" r="12" fill="#3a89ff"/>
+<text x="212" y="244" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Generate
+NIST256p key pair</text>
+<rect x="560" y="200" width="280" height="115" rx="28" fill="#131c36" stroke="#8b5cf6" stroke-width="3" opacity=".96"/>
+<rect x="578" y="218" width="54" height="54" rx="18" fill="#8b5cf6" opacity=".2"/>
+<circle cx="605" cy="245" r="12" fill="#8b5cf6"/>
+<text x="652" y="244" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Address
+SHA-256(pubkey)[:40]</text>
+<rect x="1000" y="200" width="280" height="115" rx="28" fill="#131c36" stroke="#22d3ee" stroke-width="3" opacity=".96"/>
+<rect x="1018" y="218" width="54" height="54" rx="18" fill="#22d3ee" opacity=".2"/>
+<circle cx="1045" cy="245" r="12" fill="#22d3ee"/>
+<text x="1092" y="244" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Sign
+transaction hash</text>
+<rect x="340" y="500" width="280" height="115" rx="28" fill="#131c36" stroke="#22c55e" stroke-width="3" opacity=".96"/>
+<rect x="358" y="518" width="54" height="54" rx="18" fill="#22c55e" opacity=".2"/>
+<circle cx="385" cy="545" r="12" fill="#22c55e"/>
+<text x="432" y="544" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Store
+Fernet encrypted</text>
+<rect x="780" y="500" width="280" height="115" rx="28" fill="#131c36" stroke="#f59e0b" stroke-width="3" opacity=".96"/>
+<rect x="798" y="518" width="54" height="54" rx="18" fill="#f59e0b" opacity=".2"/>
+<circle cx="825" cy="545" r="12" fill="#f59e0b"/>
+<text x="872" y="544" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Verify
+pubkey maps to sender</text>
+</svg>

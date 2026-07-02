@@ -1,0 +1,8 @@
+stateDiagram-v2
+  [*] --> Genesis
+  Genesis --> Active
+  Active --> PendingTx: transaction accepted
+  PendingTx --> Mining: miner selected
+  Mining --> Active: block appended
+  Active --> Invalid: tamper demo
+  Invalid --> Genesis: reset

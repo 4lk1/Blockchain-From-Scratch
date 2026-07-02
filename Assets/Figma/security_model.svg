@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800">
+
+<defs>
+  <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0%" stop-color="#3a89ff"/>
+    <stop offset="50%" stop-color="#8b5cf6"/>
+    <stop offset="100%" stop-color="#22d3ee"/>
+  </linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1400" height="800" rx="48" fill="#070a16"/>
+<circle cx="1180" cy="110" r="230" fill="#3a89ff" opacity=".12" filter="url(#glow)"/>
+<circle cx="210" cy="690" r="260" fill="#8b5cf6" opacity=".12" filter="url(#glow)"/>
+<text x="70" y="92" fill="#f4f7fb" font-family="Inter, Arial" font-size="46" font-weight="700">Security Model</text>
+<path d="M265 300 C365 300, 365 505, 465 505" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<text x="365" y="390" fill="#9cacbf" font-family="Inter, Arial" font-size="24" text-anchor="middle">tamper</text>
+<path d="M700 300 C817 300, 817 505, 935 505" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<text x="817" y="390" fill="#9cacbf" font-family="Inter, Arial" font-size="24" text-anchor="middle">verify</text>
+<path d="M1130 300 C1032 300, 1032 505, 935 505" stroke="url(#g)" stroke-width="5" fill="none" opacity=".85"/>
+<text x="1032" y="390" fill="#9cacbf" font-family="Inter, Arial" font-size="24" text-anchor="middle">protect</text>
+<rect x="120" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#3a89ff" stroke-width="3" opacity=".96"/>
+<rect x="138" y="208" width="54" height="54" rx="18" fill="#3a89ff" opacity=".2"/>
+<circle cx="165" cy="235" r="12" fill="#3a89ff"/>
+<text x="212" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">SHA-256
+block integrity</text>
+<rect x="555" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#8b5cf6" stroke-width="3" opacity=".96"/>
+<rect x="573" y="208" width="54" height="54" rx="18" fill="#8b5cf6" opacity=".2"/>
+<circle cx="600" cy="235" r="12" fill="#8b5cf6"/>
+<text x="647" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">ECDSA
+sender proof</text>
+<rect x="990" y="190" width="285" height="110" rx="28" fill="#131c36" stroke="#22d3ee" stroke-width="3" opacity=".96"/>
+<rect x="1008" y="208" width="54" height="54" rx="18" fill="#22d3ee" opacity=".2"/>
+<circle cx="1035" cy="235" r="12" fill="#22d3ee"/>
+<text x="1082" y="234" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Fernet
+wallet storage</text>
+<rect x="320" y="505" width="285" height="110" rx="28" fill="#131c36" stroke="#f59e0b" stroke-width="3" opacity=".96"/>
+<rect x="338" y="523" width="54" height="54" rx="18" fill="#f59e0b" opacity=".2"/>
+<circle cx="365" cy="550" r="12" fill="#f59e0b"/>
+<text x="412" y="549" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Lab
+attack simulation</text>
+<rect x="795" y="505" width="285" height="110" rx="28" fill="#131c36" stroke="#22c55e" stroke-width="3" opacity=".96"/>
+<rect x="813" y="523" width="54" height="54" rx="18" fill="#22c55e" opacity=".2"/>
+<circle cx="840" cy="550" r="12" fill="#22c55e"/>
+<text x="887" y="549" fill="#f4f7fb" font-family="Inter, Arial" font-size="28" font-weight="700">Validation
+full replay audit</text>
+</svg>

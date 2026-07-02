@@ -1,0 +1,8 @@
+graph LR
+  api.py --> services
+  services --> blockchain.py
+  services --> wallet.py
+  blockchain.py --> block.py
+  blockchain.py --> transaction.py
+  blockchain.py --> validation.py
+  frontend[js modules] --> api.py
