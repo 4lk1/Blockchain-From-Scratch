@@ -1,20 +1,59 @@
-# Local blockchain state (auto-generated)
+# Local blockchain state and runtime output
 data/
 *.tmp
+*.temp
+*.log
+
+# Environment and local secrets
+.env
+.env.*
+.env.example
+*.pem
+*.key
+*.cert
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Node dependencies, caches, and build output
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+dist/
+build/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated/local documentation and presentation assets
 docs/
-.cursor/
-
+documentation/
 Assets/
+Presentation.pdf
+Presentation.pptx
+scripts/docs/
 
+# Cursor, editor, and local contributor files
+.cursor/
+.vscode/
+.idea/
 AGENTS.md
 CHNGELOG.md
 DEVELOPER.md
 IMPLEMENTATION_RULES.md
 
-
-# Environment
-.env
-.env.example
-documentation/
-Presentation.pdf
-Presentation.pptx
+# OS noise
+.DS_Store
+Thumbs.db
