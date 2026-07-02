@@ -81,21 +81,13 @@ elif [[ -z "$META_API_URL" ]]; then
 fi
 
 # Inject API URL into the built index.html (runtime default for AppConfig).
-python3 - "$OUT/index.html" "$META_API_URL" <<'PY'
-import sys
-from pathlib import Path
-
-path = Path(sys.argv[1])
-api_url = sys.argv[2]
-text = path.read_text(encoding="utf-8")
-needle = '<meta name="chain-api-url" content="'
-start = text.find(needle)
-if start == -1:
-    raise SystemExit("chain-api-url meta tag not found in index.html")
-start += len(needle)
-end = text.find('"', start)
-path.write_text(text[:start] + api_url + text[end:], encoding="utf-8")
-PY
+INDEX_HTML="$OUT/index.html"
+if ! grep -q '<meta name="chain-api-url" content="' "$INDEX_HTML"; then
+  echo "error: chain-api-url meta tag not found in index.html" >&2
+  exit 1
+fi
+META_ESCAPED="$(printf '%s' "$META_API_URL" | sed -e 's/[\\/&|]/\\&/g')"
+sed -i "s|\(<meta name=\"chain-api-url\" content=\"\)[^\"]*|\1${META_ESCAPED}|" "$INDEX_HTML"
 
 echo ""
 echo "Build complete → $OUT"

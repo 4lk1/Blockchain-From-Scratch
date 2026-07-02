@@ -5,9 +5,13 @@
 # CHAIN_API_URL in the Netlify environment, or enable CHAIN_NETLIFY_PROXY=true
 # to proxy API routes through Netlify (see scripts/netlify-build.sh).
 
+# Base directory is frontend/ so Netlify does not auto-install root
+# requirements.txt (FastAPI backend deps). The static build only copies
+# frontend assets and injects CHAIN_API_URL — no Python packages needed.
 [build]
-  command = "bash scripts/netlify-build.sh"
-  publish = "dist/netlify"
+  base = "frontend"
+  command = "bash ../scripts/netlify-build.sh"
+  publish = "../dist/netlify"
 
 [build.environment]
   NODE_VERSION = "20"
