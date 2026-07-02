@@ -43,16 +43,26 @@ async function initializeApp() {
         const apiErr = ErrorUtils.fromUnknown(err);
         ConnectionStatus.markOffline(apiErr.toDisplayString());
 
+        const apiLabel = AppConfig.apiBaseUrl || window.location.origin;
+        const hosted = !AppConfig._isLocalHostPage();
+        const hint = hosted
+            ? 'Deploy the FastAPI backend and set <code class="mono">CHAIN_API_URL</code> in Netlify, then redeploy. See README → Hosting on Netlify.'
+            : '<code class="mono">python -m uvicorn backend.api:app --reload</code>';
+        const storageHint = hosted
+            ? '<p class="text-muted" style="font-size:0.75rem;margin-top:0.75rem">If you previously set a custom API URL in DevTools, clear it: <code class="mono">localStorage.removeItem(\'chain_api_url\')</code></p>'
+            : '';
+
         const main = document.getElementById('main-content');
         if (main) {
             main.innerHTML = `
-                <div class="state-block state-block--error" style="margin:var(--space-8) auto;max-width:480px">
+                <div class="state-block state-block--error" style="margin:var(--space-8) auto;max-width:520px">
                     <div class="state-block__icon">!</div>
                     <p class="state-block__title">Unable to connect</p>
-                    <p class="state-block__message">${apiErr.toDisplayString()}</p>
-                    <p class="text-muted" style="font-size:0.8125rem">API: <code class="mono">${AppConfig.apiBaseUrl}</code></p>
+                    <p class="state-block__message">${UIHelpers.escape(apiErr.toDisplayString())}</p>
+                    <p class="text-muted" style="font-size:0.8125rem">API: <code class="mono">${UIHelpers.escape(apiLabel)}</code></p>
                     <button type="button" class="btn btn--primary btn--sm" onclick="location.reload()">Retry</button>
-                    <code class="mono block" style="margin-top:1rem;text-align:left;font-size:0.75rem">python -m uvicorn backend.api:app --reload</code>
+                    <div class="text-muted" style="margin-top:1rem;text-align:left;font-size:0.75rem">${hint}</div>
+                    ${storageHint}
                 </div>
             `;
         }

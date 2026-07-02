@@ -1,0 +1,21 @@
+# Render Blueprint — Chain Explorer FastAPI backend
+# https://render.com/docs/blueprint-spec
+#
+# After deploy, copy the service URL (e.g. https://chain-explorer-api.onrender.com)
+# into Netlify as CHAIN_API_URL and redeploy the frontend.
+
+services:
+  - type: web
+    name: chain-explorer-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: CHAIN_CORS_ORIGINS
+        value: "*"
+      - key: CHAIN_PERSISTENCE_ENABLED
+        value: "true"

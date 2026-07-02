@@ -1,9 +1,9 @@
 # Chain Explorer — Netlify static frontend
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 #
-# The FastAPI backend is not run on Netlify. Host it separately and set
-# CHAIN_API_URL in the Netlify environment, or enable CHAIN_NETLIFY_PROXY=true
-# to proxy API routes through Netlify (see scripts/netlify-build.sh).
+# The FastAPI backend is not run on Netlify. Host it separately (see render.yaml)
+# and set CHAIN_API_URL in Netlify → Environment variables, then redeploy.
+# The build enables same-origin API proxy by default (CHAIN_NETLIFY_PROXY=true).
 
 # Base directory is frontend/ so Netlify does not auto-install root
 # requirements.txt (FastAPI backend deps). The static build only copies

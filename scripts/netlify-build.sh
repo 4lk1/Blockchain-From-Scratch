@@ -26,8 +26,22 @@ if [[ -f "$ROOT/.env" ]]; then
 fi
 
 BACKEND_URL="${CHAIN_API_URL:-}"
-PROXY="${CHAIN_NETLIFY_PROXY:-false}"
+if [[ -n "$BACKEND_URL" ]]; then
+  # Same-origin proxy avoids CORS and mixed-content issues on HTTPS Netlify sites.
+  PROXY="${CHAIN_NETLIFY_PROXY:-true}"
+else
+  PROXY="${CHAIN_NETLIFY_PROXY:-false}"
+fi
 META_API_URL="$BACKEND_URL"
+
+if [[ -n "${NETLIFY:-}" && -z "$BACKEND_URL" ]]; then
+  echo "error: CHAIN_API_URL is required when building on Netlify." >&2
+  echo "  1. Deploy the FastAPI backend (see render.yaml in the repo root)." >&2
+  echo "  2. In Netlify → Site configuration → Environment variables, set:" >&2
+  echo "       CHAIN_API_URL=https://your-api.example.com" >&2
+  echo "  3. Trigger a new deploy." >&2
+  exit 1
+fi
 
 echo "Netlify build — Chain Explorer frontend"
 echo "  Output:   $OUT"

@@ -354,6 +354,36 @@ CHAIN_API_PORT=8080 ./scripts/dev.sh
 
 Remember to update `chain-api-url` in `frontend/index.html` if you change the API port.
 
+### Hosting on Netlify (frontend) + Render (backend)
+
+Netlify serves **only the static dashboard**. The FastAPI API must run on another host (Render, Railway, a VPS, etc.).
+
+**1. Deploy the API (Render — one-click from this repo)**
+
+1. Push this repo to GitHub.
+2. In [Render](https://render.com) → **New** → **Blueprint** → connect the repo (uses `render.yaml`).
+3. After deploy, copy the service URL, e.g. `https://chain-explorer-api.onrender.com`.
+4. Verify: `curl https://your-api.onrender.com/health`
+
+**2. Connect the Netlify frontend**
+
+In Netlify → **Site configuration** → **Environment variables**, set:
+
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `CHAIN_API_URL` | `https://chain-explorer-api.onrender.com` | Upstream FastAPI base URL (required) |
+
+Optional: `CHAIN_NETLIFY_PROXY=false` to call the API directly instead of same-origin proxy (default is `true` when `CHAIN_API_URL` is set).
+
+Trigger a **new deploy** after saving env vars. The build injects the API URL and writes `_redirects` so the browser calls `/health`, `/chain`, etc. on your Netlify domain (proxied to Render).
+
+**Local Netlify preview**
+
+```bash
+CHAIN_API_URL=https://your-api.onrender.com ./scripts/netlify-build.sh
+npx serve dist/netlify
+```
+
 ### Backend not responding
 
 ```bash
@@ -367,8 +397,10 @@ curl http://localhost:8000/health
 
 1. Verify backend is up (`/health`)
 2. Open browser DevTools → Network tab for failed requests
-3. Confirm `<meta name="chain-api-url">` matches your API port
-4. Hard refresh: **Ctrl+Shift+R**
+3. Confirm `<meta name="chain-api-url">` matches your API port (local) or is empty/same-origin (Netlify proxy)
+4. On Netlify: confirm `CHAIN_API_URL` is set and redeploy
+5. Clear stale overrides: `localStorage.removeItem('chain_api_url')` in the browser console
+6. Hard refresh: **Ctrl+Shift+R**
 
 ### Mining feels slow
 
